@@ -197,7 +197,7 @@
                         <div class="col-md-8">
                             <div class="input-group input-group-lg">
                                 <input type="text" class="form-control" id="trackingCode" 
-                                       placeholder="Enter tracking code (e.g., LT-2024-001)">
+                                       placeholder="Enter tracking code (e.g., LT-XXXXXX)">
                                 <button class="btn btn-gradient" onclick="trackLaundry()">
                                     <i class="fas fa-search me-2"></i>Track
                                 </button>
@@ -339,46 +339,42 @@
 </html>
 
 <script>
-    // Function to track laundry by code
     async function trackLaundry() {
-        const trackingCode = document.getElementById('trackingCode').value.trim();
-        if (!trackingCode) {
-            alert('Please enter a tracking code.');
-            return;
-        }
-
-        const statusDisplay = document.getElementById('statusDisplay');
-        const displayTrackingCode = document.getElementById('displayTrackingCode');
-        const displayCustomerName = document.getElementById('displayCustomerName');
-        const displayServiceType = document.getElementById('displayServiceType');
-        const displayWeight = document.getElementById('displayWeight');
-        const displayPickupTime = document.getElementById('displayPickupTime');
-
-        try {
-            const laundryRef = doc(db, 'laundry', trackingCode);
-            const laundryDoc = await getDoc(laundryRef);
-
-            if (laundryDoc.exists()) {
-                const data = laundryDoc.data();
-                displayTrackingCode.textContent = data.trackingCode;
-                displayCustomerName.textContent = data.customerName;
-                displayServiceType.textContent = data.serviceType;
-                displayWeight.textContent = data.weight;
-                displayPickupTime.textContent = data.estimatedPickup;
-
-                // Update status badge
-                updateStatusBadge(data.status);
-
-                // Show status display
-                statusDisplay.style.display = 'block';
-            } else {
-                alert('No laundry found with this tracking code.');
-            }
-        } catch (error) {
-            console.error('Error fetching laundry data:', error);
-            alert('An error occurred while tracking your laundry.');
-        }
+    const trackingCode = document.getElementById('trackingCode').value.trim();
+    if (!trackingCode) {
+        alert('Please enter a tracking code.');
+        return;
     }
+
+    const statusDisplay = document.getElementById('statusDisplay');
+    const displayTrackingCode = document.getElementById('displayTrackingCode');
+    const displayCustomerName = document.getElementById('displayCustomerName');
+    const displayServiceType = document.getElementById('displayServiceType');
+    const displayWeight = document.getElementById('displayWeight');
+    const displayPickupTime = document.getElementById('displayPickupTime');
+
+    try {
+        const q = query(collection(db, "laundryOrders"), where("trackingCode", "==", trackingCode));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const data = querySnapshot.docs[0].data();
+            displayTrackingCode.textContent = data.trackingCode;
+            displayCustomerName.textContent = data.customerName;
+            displayServiceType.textContent = data.serviceType;
+            displayWeight.textContent = data.weight;
+            displayPickupTime.textContent = data.estimatedPickup;
+
+            updateStatusBadge(data.status);
+            statusDisplay.style.display = 'block';
+        } else {
+            alert('No laundry found with this tracking code.');
+        }
+    } catch (error) {
+        console.error('Error fetching laundry data:', error);
+        alert('An error occurred while tracking your laundry.');
+    }
+}
 
     // Function to update status badge
     function updateStatusBadge(status) {
@@ -409,7 +405,7 @@
     // Function to simulate QR scan
 
     function simulateQRScan() {
-        const trackingCode = 'LT-2024-001'; // Simulated tracking code
+        const trackingCode = prompt('Please enter the tracking code from the QR code:');
         document.getElementById('trackingCode').value = trackingCode;
         trackLaundry();
     }

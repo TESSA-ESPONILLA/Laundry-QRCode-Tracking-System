@@ -1,0 +1,12 @@
+{
+    "LT-1716873245": {
+        "trackingCode": "LT-1716873245",
+        "customerName": "Robertas",
+        "phoneNumber": "123456789",
+        "serviceType": "wash-dry",
+        "weight": 3,
+        "pickupDate": "2025-06-01",
+        "pickupTime": "14:00",
+        "instructions": "No bleach."
+    }
+}

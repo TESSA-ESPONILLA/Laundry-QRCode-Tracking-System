@@ -7,12 +7,17 @@
     <title>LaundryTrack - Admin Panel</title>
     <script src="script.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+ 
     <!-- Add SweetAlert -->
+  
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Add QRCode.js before the module script -->
 
     <script type="module">
+
+        
     // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
@@ -415,32 +420,103 @@ document.getElementById('newTransactionForm').addEventListener('submit', functio
     saveTransaction();
 });
 
-function generateQR() {
-    const trackingCode = document.getElementById('qrTrackingCode').value.trim();
-    if (!trackingCode) return;
 
-    const canvas = document.getElementById('qrCanvas');
-    QRCode.toCanvas(canvas, trackingCode, error => {
-        if (error) console.error(error);
+ function generateQR() {
+    const trackingCode = document.getElementById('qrTrackingCode').value.trim();
+    
+    if (!trackingCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please enter a valid tracking code',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // Check if the tracking code exists in your database
+    const orderExists = Object.values(laundryData).some(order => order.trackingCode === trackingCode);
+    
+    if (!orderExists) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Tracking code not found in database',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // Clear previous QR code if exists
+    const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+    qrCodeDisplay.innerHTML = '<canvas id="qrCanvas"></canvas>';
+    
+    // Generate new QR code
+    try {
+        const qrCode = new QRCode(document.getElementById('qrCanvas'), {
+            text: trackingCode,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
         document.getElementById('qrCodeDisplay').style.display = 'block';
         document.getElementById('qrActions').style.display = 'block';
         document.getElementById('qrTrackingText').textContent = trackingCode;
-    });
+    } catch (error) {
+        console.error("QR Generation Error:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'QR Generation Failed',
+            text: 'Could not generate QR code. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    }
 }
 
 function printQR() {
     const canvas = document.getElementById('qrCanvas');
-    const dataUrl = canvas.toDataURL();
-
-    const win = window.open();
-    win.document.write(`<img src="${dataUrl}" onload="window.print();window.close()">`);
+    const trackingCode = document.getElementById('qrTrackingText').textContent;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>QR Code - ${trackingCode}</title>
+            <style>
+                body { text-align: center; padding: 20px; }
+                h3 { margin-bottom: 10px; }
+                img { margin: 10px auto; display: block; }
+            </style>
+        </head>
+        <body>
+            <h3>LaundryTrack QR Code</h3>
+            <p>Tracking: ${trackingCode}</p>
+            <img src="${canvas.toDataURL('image/png')}">
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 200);
+                }
+            <\/script>
+        </body>
+        </html>`);
+    
+    printWindow.document.close();
 }
 
 function downloadQR() {
     const canvas = document.getElementById('qrCanvas');
+    const trackingCode = document.getElementById('qrTrackingText').textContent;
     const link = document.createElement('a');
-    link.download = 'qr-code.png';
-    link.href = canvas.toDataURL();
+    
+    link.download = `LaundryTrack-QR-${trackingCode}.png`;
+    link.href = canvas.toDataURL('image/png');
     link.click();
 }
 
@@ -553,6 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load initial data
     loadData();
 });
+
     </script>
 </body>
 </html>

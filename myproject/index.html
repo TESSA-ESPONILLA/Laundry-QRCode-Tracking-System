@@ -1,48 +1,47 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LaundryTrack - QR Code Laundry Service</title>
-      <script src="script.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 
-     <script type="module">
-    // Import Firebase modules
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, getDoc, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-    // Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyDT4kkrrr_b1oThap6A_Y1Ry0ub4aBDjt0",
-        authDomain: "laundry-tracking-system.firebaseapp.com",
-        projectId: "laundry-tracking-system",
-        storageBucket: "laundry-tracking-system.appspot.com",
-        messagingSenderId: "641186465385",
-        appId: "1:641186465385:web:c04028a8400ff48eb984f8",
-        measurementId: "G-VLXNQRRGJK"
-    };
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDT4kkrrr_b1oThap6A_Y1Ry0ub4aBDjt0",
+            authDomain: "laundry-tracking-system.firebaseapp.com",
+            projectId: "laundry-tracking-system",
+            storageBucket: "laundry-tracking-system.appspot.com",
+            messagingSenderId: "641186465385",
+            appId: "1:641186465385:web:c04028a8400ff48eb984f8",
+            measurementId: "G-VLXNQRRGJK"
+        };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
 
-    // Make db available globally
-    window.db = db;
-    window.getDocs = getDocs;
-    window.collection = collection;
-    window.addDoc = addDoc;
-    window.deleteDoc = deleteDoc;
-    window.doc = doc;
-</script>
+        // Make Firebase functions available globally
+        window.db = db;
+        window.getDocs = getDocs;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+        window.query = query;
+        window.where = where;
+    </script>
 
     <style>
-
         :root {
             --primary-color: #6366f1;
             --secondary-color: #8b5cf6;
@@ -162,25 +161,92 @@
             margin-bottom: 2rem;
             border-radius: 0 0 20px 20px;
         }
+
+        .notification-status {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .delivery-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .delivered { background-color: var(--success-color); }
+        .pending { background-color: var(--warning-color); }
+        .failed { background-color: var(--danger-color); }
+
+        .admin-table {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .admin-table th {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 15px;
+        }
+
+        .admin-table td {
+            color: white;
+            border: none;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notification-modal .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+        }
+
+        .btn-send {
+            background: linear-gradient(45deg, var(--success-color), var(--info-color));
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        .btn-send:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-     <nav class="navbar navbar-expand-lg admin-nav">
-    <div class="container">
-        <a class="navbar-brand text-white fw-bold" href="#">
-            <i class="fas fa-tshirt me-2"></i>LaundryTrack
-        </a>
-        <div class="navbar-nav ms-auto">
-            <button class="btn btn-outline-light me-2">
-                <i class="fas fa-users me-1"></i>Customer View
-            </button>
-            <a href="admin.html" class="btn btn-gradient">
-                <i class="fas fa-cog me-1"></i>Admin Panel
+    <nav class="navbar navbar-expand-lg admin-nav">
+        <div class="container">
+            <a class="navbar-brand text-white fw-bold" href="#">
+                <i class="fas fa-tshirt me-2"></i>LaundryTrack
             </a>
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-outline-light me-2">
+                    <i class="fas fa-users me-1"></i>Customer View
+                </button>
+                <a href="admin.html" class="btn btn-gradient">
+                    <i class="fas fa-cog me-1"></i>Admin Panel
+                </a>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <!-- Customer Status View -->
     <div id="customerView" class="container py-4">
@@ -247,17 +313,17 @@
                                     <h6 class="mb-1"><i class="fas fa-check-circle me-2"></i>Received</h6>
                                     <small class="text-white-50">Your laundry has been received</small>
                                 </div>
-                                <small class="text-white-50" id="receivedTime">10:30 AM</small>
+                                <small class="text-white-50" id="receivedTime">--:--</small>
                             </div>
                         </div>
 
-                        <div class="timeline-item active" data-status="washing">
+                        <div class="timeline-item" data-status="washing">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-white">
                                     <h6 class="mb-1"><i class="fas fa-sync-alt me-2"></i>Washing</h6>
                                     <small class="text-white-50">Currently being washed</small>
                                 </div>
-                                <small class="text-white-50" id="washingTime">11:00 AM</small>
+                                <small class="text-white-50" id="washingTime">--:--</small>
                             </div>
                         </div>
 
@@ -296,36 +362,81 @@
         </div>
     </div>
 
-
-
-
-        <!-- Generate QR Section -->
-        <div id="generateQR" class="admin-section" style="display: none;">
-            <div class="row justify-content-center">
-                <div class="col-lg-6">
-                    <div class="glass-card p-4 text-center">
-                        <h4 class="text-white mb-4">
-                            <i class="fas fa-qrcode me-2"></i>Generate QR Code
-                        </h4>
-                        <div class="mb-3">
-                            <input type="text" class="form-control form-control-lg" id="qrTrackingCode" 
-                                   placeholder="Enter tracking code">
-                        </div>
-                        <button class="btn btn-gradient btn-lg mb-4" onclick="generateQR()">
-                            <i class="fas fa-magic me-2"></i>Generate QR Code
+    <!-- Generate QR Section -->
+    <div id="generateQR" class="container py-4" style="display: none;">
+        <div class="page-header text-center text-white">
+            <h1 class="display-4 fw-bold mb-3">Generate QR Code</h1>
+            <p class="lead">Create QR codes for tracking laundry orders</p>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="glass-card p-4 text-center">
+                    <h4 class="text-white mb-4">
+                        <i class="fas fa-qrcode me-2"></i>Generate QR Code
+                    </h4>
+                    <div class="mb-3">
+                        <input type="text" class="form-control form-control-lg" id="qrTrackingCode" 
+                               placeholder="Enter tracking code">
+                    </div>
+                    <button class="btn btn-gradient btn-lg mb-4" onclick="generateQR()">
+                        <i class="fas fa-magic me-2"></i>Generate QR Code
+                    </button>
+                    <div id="qrCodeDisplay" class="qr-code-container mx-auto" style="display: none;">
+                        <div id="qrcode"></div>
+                        <p class="mt-2 mb-0 text-dark">Tracking: <span id="qrTrackingText"></span></p>
+                    </div>
+                    <div id="qrActions" class="mt-3" style="display: none;">
+                        <button class="btn btn-success" onclick="printQR()">
+                            <i class="fas fa-print me-2"></i>Print
                         </button>
-                        <div id="qrCodeDisplay" class="qr-code-container mx-auto" style="display: none;">
-                            <canvas id="qrCanvas"></canvas>
-                            <p class="mt-2 mb-0 text-dark">Tracking: <span id="qrTrackingText"></span></p>
-                        </div>
-                        <div id="qrActions" class="mt-3" style="display: none;">
-                            <button class="btn btn-success" onclick="printQR()">
-                                <i class="fas fa-print me-2"></i>Print
-                            </button>
-                            <button class="btn btn-info" onclick="downloadQR()">
-                                <i class="fas fa-download me-2"></i>Download
-                            </button>
-                        </div>
+                        <button class="btn btn-info" onclick="downloadQR()">
+                            <i class="fas fa-download me-2"></i>Download
+                        </button>
+                        <button class="btn btn-secondary" onclick="showCustomerView()">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Tracking
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Admin Panel View -->
+    <div id="adminPanel" class="container py-4" style="display: none;">
+        <div class="page-header text-center text-white">
+            <h1 class="display-4 fw-bold mb-3">Admin Panel</h1>
+            <p class="lead">Manage laundry orders and send notifications</p>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="text-white mb-0">
+                            <i class="fas fa-list me-2"></i>All Orders
+                        </h4>
+                        <button class="btn btn-gradient" onclick="refreshOrders()">
+                            <i class="fas fa-refresh me-2"></i>Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Tracking Code</th>
+                                    <th>Customer</th>
+                                    <th>Contact</th>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Notifications</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -335,136 +446,220 @@
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
-</body>
-</html>
+    <script>
 
-<script>
-    async function trackLaundry() {
-    const trackingCode = document.getElementById('trackingCode').value.trim();
-    if (!trackingCode) {
-        alert('Please enter a tracking code.');
-        return;
-    }
+        let currentOrderId = null;
+        let currentOrderData = null;
 
-    const statusDisplay = document.getElementById('statusDisplay');
-    const displayTrackingCode = document.getElementById('displayTrackingCode');
-    const displayCustomerName = document.getElementById('displayCustomerName');
-    const displayServiceType = document.getElementById('displayServiceType');
-    const displayWeight = document.getElementById('displayWeight');
-    const displayPickupTime = document.getElementById('displayPickupTime');
-
-    try {
-        const q = query(collection(db, "laundryOrders"), where("trackingCode", "==", trackingCode));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const data = querySnapshot.docs[0].data();
-            displayTrackingCode.textContent = data.trackingCode;
-            displayCustomerName.textContent = data.customerName;
-            displayServiceType.textContent = data.serviceType;
-            displayWeight.textContent = data.weight;
-            displayPickupTime.textContent = data.estimatedPickup;
-
-            updateStatusBadge(data.status);
-            statusDisplay.style.display = 'block';
-        } else {
-            alert('No laundry found with this tracking code.');
-        }
-    } catch (error) {
-        console.error('Error fetching laundry data:', error);
-        alert('An error occurred while tracking your laundry.');
-    }
-}
-
-    // Function to update status badge
-    function updateStatusBadge(status) {
-        const currentStatusBadge = document.getElementById('currentStatusBadge');
-        currentStatusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        
-        switch (status) {
-            case 'received':
-                currentStatusBadge.className = 'badge bg-primary fs-6 px-3 py-2';
-                break;
-            case 'washing':
-                currentStatusBadge.className = 'badge bg-warning fs-6 px-3 py-2';
-                break;
-            case 'drying':
-                currentStatusBadge.className = 'badge bg-info fs-6 px-3 py-2';
-                break;
-            case 'ready':
-                currentStatusBadge.className = 'badge bg-success fs-6 px-3 py-2';
-                break;
-            case 'completed':
-                currentStatusBadge.className = 'badge bg-secondary fs-6 px-3 py-2';
-                break;
-            default:
-                currentStatusBadge.className = 'badge bg-light fs-6 px-3 py-2';
-                break;
-
-        }}
-    // Function to simulate QR scan
-
-    function simulateQRScan() {
-        const trackingCode = prompt('Please enter the tracking code from the QR code:');
-        document.getElementById('trackingCode').value = trackingCode;
-        trackLaundry();
-    }
-    // Function to generate QR code
-    function generateQR() {
-        const trackingCode = document.getElementById('qrTrackingCode').value.trim();
-        if (!trackingCode) {
-            alert('Please enter a tracking code.');
-            return;
-        }
-
-        const qrCodeDisplay = document.getElementById('qrCodeDisplay');
-        const qrCanvas = document.getElementById('qrCanvas');
-        const qrTrackingText = document.getElementById('qrTrackingText');
-        const qrActions = document.getElementById('qrActions');
-
-        QRCode.toCanvas(qrCanvas, trackingCode, { width: 200 }, function (error) {
-            if (error) {
-                console.error(error);
-                alert('Failed to generate QR code.');
+        // Track laundry function
+        async function trackLaundry() {
+            const trackingCode = document.getElementById('trackingCode').value.trim();
+            if (!trackingCode) {
+                alert('Please enter a tracking code.');
                 return;
             }
-            qrTrackingText.textContent = trackingCode;
-            qrCodeDisplay.style.display = 'block';
-            qrActions.style.display = 'block';
+
+            const statusDisplay = document.getElementById('statusDisplay');
+            const displayTrackingCode = document.getElementById('displayTrackingCode');
+            const displayCustomerName = document.getElementById('displayCustomerName');
+            const displayServiceType = document.getElementById('displayServiceType');
+            const displayWeight = document.getElementById('displayWeight');
+            const displayPickupTime = document.getElementById('displayPickupTime');
+
+            try {
+                const q = query(collection(db, "laundryOrders"), where("trackingCode", "==", trackingCode));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const data = querySnapshot.docs[0].data();
+                    displayTrackingCode.textContent = data.trackingCode;
+                    displayCustomerName.textContent = data.customerName;
+                    displayServiceType.textContent = getServiceTypeName(data.serviceType);
+                    displayWeight.textContent = data.weight;
+                    displayPickupTime.textContent = `${data.pickupDate} ${data.pickupTime}`;
+
+                    updateStatusBadge(data.status || 'received');
+                    updateTimeline(data);
+                    statusDisplay.style.display = 'block';
+                } else {
+                    alert('No laundry found with this tracking code.');
+                }
+            } catch (error) {
+                console.error('Error fetching laundry data:', error);
+                alert('An error occurred while tracking your laundry.');
+            }
+        }
+
+        // Update status badge
+        function updateStatusBadge(status) {
+            const currentStatusBadge = document.getElementById('currentStatusBadge');
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            switch (status) {
+                case 'received':
+                    currentStatusBadge.innerHTML = `<i class="fas fa-inbox me-1"></i>${statusText}`;
+                    currentStatusBadge.className = 'badge bg-primary fs-6 px-3 py-2';
+                    break;
+                case 'washing':
+                    currentStatusBadge.innerHTML = `<i class="fas fa-sync-alt me-1"></i>${statusText}`;
+                    currentStatusBadge.className = 'badge bg-warning fs-6 px-3 py-2';
+                    break;
+                case 'drying':
+                    currentStatusBadge.innerHTML = `<i class="fas fa-wind me-1"></i>${statusText}`;
+                    currentStatusBadge.className = 'badge bg-info fs-6 px-3 py-2';
+                    break;
+                case 'ready':
+                    currentStatusBadge.innerHTML = `<i class="fas fa-bell me-1"></i>Ready`;
+                    currentStatusBadge.className = 'badge bg-success fs-6 px-3 py-2';
+                    break;
+                case 'completed':
+                    currentStatusBadge.innerHTML = `<i class="fas fa-check me-1"></i>Completed`;
+                    currentStatusBadge.className = 'badge bg-secondary fs-6 px-3 py-2';
+                    break;
+                default:
+                    currentStatusBadge.innerHTML = `<i class="fas fa-clock me-1"></i>Processing`;
+                    currentStatusBadge.className = 'badge bg-light text-dark fs-6 px-3 py-2';
+                    break;
+            }
+        }
+
+        // Update timeline
+        function updateTimeline(data) {
+            const statuses = ['received', 'washing', 'drying', 'ready', 'completed'];
+            const currentStatusIndex = statuses.indexOf(data.status || 'received');
+            
+            statuses.forEach((status, index) => {
+                const timelineItem = document.querySelector(`[data-status="${status}"]`);
+                const timeElement = document.getElementById(`${status}Time`);
+                
+                if (index <= currentStatusIndex) {
+                    timelineItem.classList.add('completed');
+                    if (index === currentStatusIndex) {
+                        timelineItem.classList.add('active');
+                    }
+                    
+                    if (data.timestamps && data.timestamps[status]) {
+                        timeElement.textContent = data.timestamps[status];
+                    } else if (status === 'received') {
+                        timeElement.textContent = new Date(data.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }
+                } else {
+                    timelineItem.classList.remove('completed', 'active');
+                    timeElement.textContent = '--:--';
+                }
+            });
+        }
+
+        // Get service type name
+        function getServiceTypeName(serviceType) {
+            const serviceMap = {
+                'wash-only': 'Wash Only',
+                'wash-dry': 'Wash & Dry',
+                'dry-clean': 'Dry Clean',
+                'iron-only': 'Iron Only'
+            };
+            return serviceMap[serviceType] || serviceType;
+        }
+
+        // Simulate QR scan
+        function simulateQRScan() {
+            const trackingCode = prompt('Please enter the tracking code from the QR code:');
+            if (trackingCode) {
+                document.getElementById('trackingCode').value = trackingCode;
+                trackLaundry();
+            }
+        }
+
+        // Generate QR code
+        function generateQR() {
+            const trackingCode = document.getElementById('qrTrackingCode').value.trim();
+            if (!trackingCode) {
+                alert('Please enter a tracking code.');
+                return;
+            }
+
+            const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+            const qrTrackingText = document.getElementById('qrTrackingText');
+            const qrActions = document.getElementById('qrActions');
+            const qrCodeContainer = document.getElementById('qrcode');
+            qrCodeContainer.innerHTML = '';
+
+            try {
+                const qr = new QRCode(qrCodeContainer, {
+                    text: trackingCode,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                qrTrackingText.textContent = trackingCode;
+                qrCodeDisplay.style.display = 'block';
+                qrActions.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                alert('Failed to generate QR code.');
+            }
+        }
+
+        // Print QR code
+        function printQR() {
+            const qrCanvas = document.getElementById('qrCanvas');
+            const printWindow = window.open('', '', 'width=600,height=400');
+            printWindow.document.write('<html><head><title>Print QR Code</title></head>');
+            printWindow.document.write('<body style="text-align: center;">');
+            printWindow.document.write('<h2>QR Code for Tracking</h2>');
+            printWindow.document.write(qrCanvas.outerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Download QR code
+        function downloadQR() {
+            const qrCodeContainer = document.getElementById('qrcode');
+            const trackingCode = document.getElementById('qrTrackingText').textContent;
+            const canvas = qrCodeContainer.querySelector('canvas');
+            
+            if (!canvas) {
+                alert('No QR code to download');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = `LaundryTrack_QR_${trackingCode}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Show generate QR section
+        function showGenerateQR() {
+            document.getElementById('customerView').style.display = 'none';
+            document.getElementById('generateQR').style.display = 'block';
+        }
+
+        // Show customer view section
+        function showCustomerView() {
+            document.getElementById('generateQR').style.display = 'none';
+            document.getElementById('customerView').style.display = 'block';
+        }
+
+        // Allow Enter key to trigger tracking
+        document.getElementById('trackingCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                trackLaundry();
+            }
         });
-    }
-    // Function to print QR code
-    function printQR() {
-        const qrCanvas = document.getElementById('qrCanvas');
-        const printWindow = window.open('', '', 'width=600,height=400');
-        printWindow.document.write('<html><head><title>Print QR Code</title></head>');
-        printWindow.document.write('<body style="text-align: center;">');
-        printWindow.document.write('<h2>QR Code for Tracking</h2>');
-        printWindow.document.write(qrCanvas.outerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.print();
-    }
-    // Function to download QR code
-    function downloadQR() {
-        const qrCanvas = document.getElementById('qrCanvas');
-        const link = document.createElement('a');
-        link.href = qrCanvas.toDataURL('image/png');
-        link.download = 'laundry_qr_code.png';
-        link.click();
-    }
-    // Function to show the QR code generation section
-    function showGenerateQR() {
-        document.getElementById('customerView').style.display = 'none';
-        document.getElementById('generateQR').style.display = 'block';
-    }
-    // Function to show the customer view
-    function showCustomerView() {
-        document.getElementById('generateQR').style.display = 'none';
-        document.getElementById('customerView').style.display = 'block';
-    }
-    // Event listener for the admin panel button
-    document.querySelector('.btn-outline-light').addEventListener('click', showGenerateQR);
-    // Event listener for the customer view button
-    document.querySelector('.btn-gradient').addEventListener('click', showCustomerView);
-</script>
+
+        document.getElementById('qrTrackingCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html>

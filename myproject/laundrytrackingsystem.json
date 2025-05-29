@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "laundry-tracking-system",
+  "private_key_id": "2effff12ccf46d54bb6b949198ef7e4304937c41",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCe+LPvV40uGiEj\nM3Pmnj1ge0k6iHWZFQcT/iHFViQrFo7u5bWSCRJxqxuRL206roxzwEjLp9+idTn0\nZck7+5k/Z8b9UaamS94pj2l+iD5nYxUVI6/y9r/3ThM4dSfUucZsFDDn4zQUVT0m\nk2j4gmJeE8B11H5sa7ZZb6vYhEu52RCMaggmhNwcNxMNOF/UUI/78BKTduun7cA3\nqCD0T6Xj8D8Z22SbeaurPbWzE7zhQhM6YG2gCFJ2ucLy2ynwiyN8+bAR/8Ah1ZPK\nqeWmEQFHI+r632y7v/9P8gC+wUvo1XhrKeZuIW0uy6Q2YsMxBH1rWSTy0UO9KTRr\nPTi+3lHfAgMBAAECggEAGHSmKbHMVEVMx7+ImvfI9WjB8TFA9hXYCulThKol0kMc\nJgBMmHSw06/BA+rJ4PctQDlaeYoPy0xBaCmodYPVJX3vjNTc0ERnnvki/4YyI3GI\nssHUtYnkKkVmi47qW71gmwvYIjQ/tMkQKTkQMvrL6zEasIXKFR/U45lcVGi1xZcy\n53kpK1/Qep3WFrPBBPyWEjxhwKXBpR+9U0EzQhZUjSE41ZIuEc3KzCl8IqRZAnr4\nyQ3aLrNY+McaeYCbjozMJcLXH30GK9WlM+C2lpTP1NJzZo75ktB9P+NHl2F2/GnA\n03C552a9k0qLndWI1lc46elbc5/l1QNRNA2YLLdU8QKBgQDSKy/Dvwuw2I/E77oB\nS3XxLMY8uqW17nJp5MZ5lhnAQrlng4KEjWxzQNrh6Wd5oNmT1xvLfC5+uzjjZut3\njSnaVYk64g0poWH7kDstS975DDoXdS6F1o6alhdYPNZiVVHmM4E3SMloBcuZzgvF\n8kXo9Af4NAtY13Yinrbyj9BHuwKBgQDBo2WevA3D9aRXfxqJLIoZ/UNuOOmHG7Z9\nGN+PAo5/hIb6wprNKe9yKFw3xwUXjoOIejTB6qE2MtfIbLpL4KdzcU3nCSUtTqM0\nC1u3GcQtQroVg+dwrS1UQzXT9iJo18yRBOMAF3arK71JuZ11tPeT+vD0wbwuUJHa\nAPa0BVLCLQKBgBJA5fkeUqmdZX85QvJx12CG/wCvRU0z1IQV9pcAzmPAZ9Hxvhg9\nIDoyW9BbMT2DFuKcQDHAK1mecSZu/ex4OjZYT37puzLubVAoCru4ZzlCMplu+Adv\nxxruBkEHp6cKuf5AYuymSbfbKP/GwYcDr8a3yylne8TPkdcX6dPPYcuZAoGAd4nx\nj/6z2MdqPwGeVhSC5OxuljrYH6pCDBQw3s5LPfmIgoFko0dCJI058M0SHarDFJus\nuhGomBbnEzncAD+d4CyQVRJWOxQSuGxSoERt0SsiSWn2lJ60HxKmxkVqlKK0DMqh\ngEr73UvRPRQzWpjvRhFicxaun0Dp6VUy94tZvbkCgYEAhT1tFO0xV40oajSQlssc\nMIb9Zsjea+DKtqjDY2d+SkQJ6ie2lCW1nVKaciwX+I5Nh9BVLfV0nxGfiHx3w0Ry\n35h+w/PZQ8rPSiuWxWUuiWd3ynrpvu7h6KtLfSVdlZU/wi7ml6TISF4NnQFi92xM\n0EMt9f+WwVRLptG+xdMSyIc=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@laundry-tracking-system.iam.gserviceaccount.com",
+  "client_id": "100330035671349879738",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40laundry-tracking-system.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

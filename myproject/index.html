@@ -9,7 +9,40 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+
+     <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, getDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDT4kkrrr_b1oThap6A_Y1Ry0ub4aBDjt0",
+        authDomain: "laundry-tracking-system.firebaseapp.com",
+        projectId: "laundry-tracking-system",
+        storageBucket: "laundry-tracking-system.appspot.com",
+        messagingSenderId: "641186465385",
+        appId: "1:641186465385:web:c04028a8400ff48eb984f8",
+        measurementId: "G-VLXNQRRGJK"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // Make db available globally
+    window.db = db;
+    window.getDocs = getDocs;
+    window.collection = collection;
+    window.addDoc = addDoc;
+    window.deleteDoc = deleteDoc;
+    window.doc = doc;
+</script>
+
     <style>
+
         :root {
             --primary-color: #6366f1;
             --secondary-color: #8b5cf6;
@@ -302,287 +335,140 @@
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        let laundryData = {};
+</body>
+</html>
 
-         fetch('laundryData.json')
-        .then(response => response.json())
-        .then(data => {
-          laundryData = data;
-        })
-        .catch(error => {
-          console.error('Error loading laundry data:', error);
-        });
-
-       
-        function showCustomerView() {
-            document.getElementById('customerView').style.display = 'block';
-            document.getElementById('adminView').style.display = 'none';
+<script>
+    // Function to track laundry by code
+    async function trackLaundry() {
+        const trackingCode = document.getElementById('trackingCode').value.trim();
+        if (!trackingCode) {
+            alert('Please enter a tracking code.');
+            return;
         }
 
-        function showAdminView() {
-            document.getElementById('customerView').style.display = 'none';
-            document.getElementById('adminView').style.display = 'block';
-            loadOrdersTable();
-        }
+        const statusDisplay = document.getElementById('statusDisplay');
+        const displayTrackingCode = document.getElementById('displayTrackingCode');
+        const displayCustomerName = document.getElementById('displayCustomerName');
+        const displayServiceType = document.getElementById('displayServiceType');
+        const displayWeight = document.getElementById('displayWeight');
+        const displayPickupTime = document.getElementById('displayPickupTime');
 
-        function showAdminSection(sectionId) {
-    
-            document.querySelectorAll('.admin-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            
-         
-            document.getElementById(sectionId).style.display = 'block';
-            
-         
-            document.querySelectorAll('.btn-group .btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.add('btn-outline-light');
-                btn.classList.remove('btn-gradient');
-            });
-            
-            event.target.classList.add('active', 'btn-gradient');
-            event.target.classList.remove('btn-outline-light');
-        }
+        try {
+            const laundryRef = doc(db, 'laundry', trackingCode);
+            const laundryDoc = await getDoc(laundryRef);
 
-    
-        function trackLaundry() {
-            const trackingCode = document.getElementById('trackingCode').value.trim().toUpperCase();
-            if (!trackingCode) {
-                alert('Please enter a tracking code');
-                return;
+            if (laundryDoc.exists()) {
+                const data = laundryDoc.data();
+                displayTrackingCode.textContent = data.trackingCode;
+                displayCustomerName.textContent = data.customerName;
+                displayServiceType.textContent = data.serviceType;
+                displayWeight.textContent = data.weight;
+                displayPickupTime.textContent = data.estimatedPickup;
+
+                // Update status badge
+                updateStatusBadge(data.status);
+
+                // Show status display
+                statusDisplay.style.display = 'block';
+            } else {
+                alert('No laundry found with this tracking code.');
             }
-            
-            displayLaundryStatus(trackingCode);
+        } catch (error) {
+            console.error('Error fetching laundry data:', error);
+            alert('An error occurred while tracking your laundry.');
         }
+    }
 
-        function simulateQRScan() {
-    
-            const trackingCode = 'LT-2024-001';
-            document.getElementById('trackingCode').value = trackingCode;
-            displayLaundryStatus(trackingCode);
-        }
-
-        function displayLaundryStatus(trackingCode) {
-            const order = laundryData[trackingCode];
-            
-            if (!order) {
-                alert('Tracking code not found. Please check your code and try again.');
-                return;
-            }
-            
-       
-            document.getElementById('displayTrackingCode').textContent = order.trackingCode;
-            document.getElementById('displayCustomerName').textContent = order.customerName;
-            document.getElementById('displayServiceType').textContent = getServiceTypeName(order.serviceType);
-            document.getElementById('displayWeight').textContent = order.weight;
-            document.getElementById('displayPickupTime').textContent = `${order.pickupDate} at ${order.pickupTime}`;
-            
+    // Function to update status badge
+    function updateStatusBadge(status) {
+        const currentStatusBadge = document.getElementById('currentStatusBadge');
+        currentStatusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
         
-            const statusBadge = document.getElementById('currentStatusBadge');
-            const statusInfo = getStatusInfo(order.status);
-            statusBadge.innerHTML = `<i class="${statusInfo.icon} me-1"></i>${statusInfo.text}`;
-            statusBadge.className = `badge ${statusInfo.class} fs-6 px-3 py-2`;
-            
-     
-            updateTimeline(order.status, order.timestamps);
-            
-      
-            document.getElementById('statusDisplay').style.display = 'block';
+        switch (status) {
+            case 'received':
+                currentStatusBadge.className = 'badge bg-primary fs-6 px-3 py-2';
+                break;
+            case 'washing':
+                currentStatusBadge.className = 'badge bg-warning fs-6 px-3 py-2';
+                break;
+            case 'drying':
+                currentStatusBadge.className = 'badge bg-info fs-6 px-3 py-2';
+                break;
+            case 'ready':
+                currentStatusBadge.className = 'badge bg-success fs-6 px-3 py-2';
+                break;
+            case 'completed':
+                currentStatusBadge.className = 'badge bg-secondary fs-6 px-3 py-2';
+                break;
+            default:
+                currentStatusBadge.className = 'badge bg-light fs-6 px-3 py-2';
+                break;
+
+        }}
+    // Function to simulate QR scan
+
+    function simulateQRScan() {
+        const trackingCode = 'LT-2024-001'; // Simulated tracking code
+        document.getElementById('trackingCode').value = trackingCode;
+        trackLaundry();
+    }
+    // Function to generate QR code
+    function generateQR() {
+        const trackingCode = document.getElementById('qrTrackingCode').value.trim();
+        if (!trackingCode) {
+            alert('Please enter a tracking code.');
+            return;
         }
 
-        function updateTimeline(currentStatus, timestamps) {
-            const statuses = ['received', 'washing', 'drying', 'ready', 'completed'];
-            const currentIndex = statuses.indexOf(currentStatus);
-            
-            statuses.forEach((status, index) => {
-                const item = document.querySelector(`[data-status="${status}"]`);
-                const timeElement = document.getElementById(`${status}Time`);
-                
-                if (index < currentIndex) {
-                    item.classList.add('completed');
-                    item.classList.remove('active');
-                } else if (index === currentIndex) {
-                    item.classList.add('active');
-                    item.classList.remove('completed');
-                } else {
-                    item.classList.remove('active', 'completed');
-                }
-                
-                if (timestamps[status]) {
-                    timeElement.textContent = timestamps[status];
-                }
-            });
-        }
+        const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+        const qrCanvas = document.getElementById('qrCanvas');
+        const qrTrackingText = document.getElementById('qrTrackingText');
+        const qrActions = document.getElementById('qrActions');
 
-        function getStatusInfo(status) {
-            const statusMap = {
-                'received': { text: 'Received', icon: 'fas fa-check-circle', class: 'bg-info' },
-                'washing': { text: 'Washing', icon: 'fas fa-sync-alt', class: 'bg-primary' },
-                'drying': { text: 'Drying', icon: 'fas fa-wind', class: 'bg-warning' },
-                'ready': { text: 'Ready for Pickup', icon: 'fas fa-bell', class: 'bg-success' },
-                'completed': { text: 'Completed', icon: 'fas fa-handshake', class: 'bg-secondary' }
-            };
-            return statusMap[status] || { text: 'Unknown', icon: 'fas fa-question', class: 'bg-dark' };
-        }
-
-        function getServiceTypeName(serviceType) {
-            const serviceMap = {
-                'wash-only': 'Wash Only',
-                'wash-dry': 'Wash & Dry',
-                'dry-clean': 'Dry Clean',
-                'iron-only': 'Iron Only'
-            };
-            return serviceMap[serviceType] || serviceType;
-        }
-
-     
-        document.getElementById('newTransactionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const trackingCode = generateTrackingCode();
-            const formData = {
-                trackingCode: trackingCode,
-                customerName: document.getElementById('customerName').value,
-                phoneNumber: document.getElementById('phoneNumber').value,
-                serviceType: document.getElementById('serviceType').value,
-                weight: parseFloat(document.getElementById('weight').value),
-                status: 'received',
-                pickupDate: document.getElementById('pickupDate').value,
-                pickupTime: document.getElementById('pickupTime').value,
-                instructions: document.getElementById('instructions').value,
-                timestamps: {
-                    received: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    washing: null,
-                    drying: null,
-                    ready: null,
-                    completed: null
-                }
-            };
-            
-       
-            laundryData[trackingCode] = formData;
-            
-       
-            document.getElementById('qrTrackingCode').value = trackingCode;
-            generateQR();
-            
-        
-            document.getElementById('newTransactionForm').reset();
-            
- 
-            showAdminSection('generateQR');
-            
-            alert(`Transaction created successfully!\nTracking Code: ${trackingCode}`);
-        });
-
-        function generateTrackingCode() {
-            const prefix = 'LT';
-            const year = new Date().getFullYear();
-            const timestamp = Date.now().toString().slice(-6);
-            return `${prefix}-${year}-${timestamp}`;
-        }
-
-        function loadOrdersTable() {
-            const tbody = document.getElementById('ordersTableBody');
-            tbody.innerHTML = '';
-            
-            Object.values(laundryData).forEach(order => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${order.trackingCode}</strong></td>
-                    <td>${order.customerName}</td>
-                    <td>${getServiceTypeName(order.serviceType)}</td>
-                    <td>
-                        <select class="form-select form-select-sm" onchange="updateOrderStatus('${order.trackingCode}', this.value)">
-                            <option value="received" ${order.status === 'received' ? 'selected' : ''}>Received</option>
-                            <option value="washing" ${order.status === 'washing' ? 'selected' : ''}>Washing</option>
-                            <option value="drying" ${order.status === 'drying' ? 'selected' : ''}>Drying</option>
-                            <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready</option>
-                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
-                        </select>
-                    </td>
-                    <td>${order.pickupDate} ${order.pickupTime}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-light" onclick="generateQRForOrder('${order.trackingCode}')">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function updateOrderStatus(trackingCode, newStatus) {
-            if (laundryData[trackingCode]) {
-                laundryData[trackingCode].status = newStatus;
-                laundryData[trackingCode].timestamps[newStatus] = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            }
-        }
-
-        function generateQRForOrder(trackingCode) {
-            document.getElementById('qrTrackingCode').value = trackingCode;
-            showAdminSection('generateQR');
-            generateQR();
-        }
-
-        function generateQR() {
-            const trackingCode = document.getElementById('qrTrackingCode').value.trim();
-            if (!trackingCode) {
-                alert('Please enter a tracking code');
+        QRCode.toCanvas(qrCanvas, trackingCode, { width: 200 }, function (error) {
+            if (error) {
+                console.error(error);
+                alert('Failed to generate QR code.');
                 return;
             }
-            
-            const canvas = document.getElementById('qrCanvas');
-            const qrData = `https://laundrytrack.com/track/${trackingCode}`;
-            
-            QRCode.toCanvas(canvas, qrData, {
-                width: 200,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, function (error) {
-                if (error) {
-                    console.error(error);
-                    alert('Error generating QR code');
-                } else {
-                    document.getElementById('qrTrackingText').textContent = trackingCode;
-                    document.getElementById('qrCodeDisplay').style.display = 'block';
-                    document.getElementById('qrActions').style.display = 'block';
-                }
-            });
-        }
-
-        function printQR() {
-            const qrContainer = document.getElementById('qrCodeDisplay');
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head><title>LaundryTrack Receipt</title></head>
-                <body style="text-align: center; font-family: Arial, sans-serif;">
-                    <h2>LaundryTrack Receipt</h2>
-                    ${qrContainer.outerHTML}
-                    <p>Scan this QR code to track your laundry</p>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-        }
-
-        function downloadQR() {
-            const canvas = document.getElementById('qrCanvas');
-            const link = document.createElement('a');
-            link.download = `laundrytrack-${document.getElementById('qrTrackingText').textContent}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-   
-        document.addEventListener('DOMContentLoaded', function() {
-            showCustomerView(); // Show customer view by default
-            document.getElementById('statusDisplay').style.display = 'none'; // Hide status display initially
+            qrTrackingText.textContent = trackingCode;
+            qrCodeDisplay.style.display = 'block';
+            qrActions.style.display = 'block';
         });
+    }
+    // Function to print QR code
+    function printQR() {
+        const qrCanvas = document.getElementById('qrCanvas');
+        const printWindow = window.open('', '', 'width=600,height=400');
+        printWindow.document.write('<html><head><title>Print QR Code</title></head>');
+        printWindow.document.write('<body style="text-align: center;">');
+        printWindow.document.write('<h2>QR Code for Tracking</h2>');
+        printWindow.document.write(qrCanvas.outerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    }
+    // Function to download QR code
+    function downloadQR() {
+        const qrCanvas = document.getElementById('qrCanvas');
+        const link = document.createElement('a');
+        link.href = qrCanvas.toDataURL('image/png');
+        link.download = 'laundry_qr_code.png';
+        link.click();
+    }
+    // Function to show the QR code generation section
+    function showGenerateQR() {
+        document.getElementById('customerView').style.display = 'none';
+        document.getElementById('generateQR').style.display = 'block';
+    }
+    // Function to show the customer view
+    function showCustomerView() {
+        document.getElementById('generateQR').style.display = 'none';
+        document.getElementById('customerView').style.display = 'block';
+    }
+    // Event listener for the admin panel button
+    document.querySelector('.btn-outline-light').addEventListener('click', showGenerateQR);
+    // Event listener for the customer view button
+    document.querySelector('.btn-gradient').addEventListener('click', showCustomerView);
+</script>

@@ -6,7 +6,9 @@
     <title>LaundryTrack - QR Code Laundry Service</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <script type="module">
         // Import Firebase modules
@@ -228,6 +230,80 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        
+
+
+        /* Barcode Scanner Section Styles */
+#scannerContainer {
+    position: relative;
+    margin: 0 auto;
+    max-width: 500px;
+}
+
+#scannerVideo {
+    background: #000;
+    border-radius: 10px;
+    width: 100%;
+    display: block;
+}
+
+#scannerCanvas {
+    display: none;
+}
+
+#detectedCode {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 300px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    color: #333;
+}
+
+.scan-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 2px;
+    background: rgba(255, 0, 0, 0.5);
+    animation: scan 2s infinite linear;
+}
+
+@keyframes scan {
+    0% { top: 10%; }
+    100% { top: 90%; }
+}
+
+.btn-gradient {
+    background: linear-gradient(45deg, #6366f1, #8b5cf6);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.btn-danger {
+    background: #ef4444;
+    border: none;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    color: white;
+}
     </style>
 </head>
 <body>
@@ -260,25 +336,77 @@
             <div class="col-md-8">
                 <div class="glass-card p-4">
                     <div class="row">
-                        <div class="col-md-8">
-                            <div class="input-group input-group-lg">
-                                <input type="text" class="form-control" id="trackingCode" 
-                                       placeholder="Enter tracking code (e.g., LT-XXXXXX)">
-                                <button class="btn btn-gradient" onclick="trackLaundry()">
-                                    <i class="fas fa-search me-2"></i>Track
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <button class="btn btn-outline-light btn-lg w-100" onclick="simulateQRScan()">
-                                <i class="fas fa-qrcode me-2"></i>Scan QR
-                            </button>
-                        </div>
+
+                <div class="col-md-12 mb-4">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control" id="trackingCode" 
+                               placeholder="Enter tracking code (e.g., LT-XXXXXX)">
+                        <button class="btn btn-gradient" onclick="trackLaundry()">
+                            <i class="fas fa-search me-2"></i>Track
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-12 mb-4">
+                    <div class="d-flex gap-3 align-items-center">
+                        <select class="form-select form-select-lg" id="scanType" style="max-width: 600px;">
+                            <option value="barcode">Barcode Scanner</option>
+                            <option value="text">Text Recognition</option>
+                        </select>
+                
+              
+                        <button id="startScanner" class="btn btn-gradient btn-lg" >
+                            <i class="fas fa-camera me-2"></i>Start Scanner
+                        </button>
+                        <button id="stopScanner" class="btn btn-danger btn-lg" style="display: none;">
+                            <i class="fas fa-stop-circle me-2"></i>Stop Scanner
+                        </button>
+                    
+                </div>
+                <div id="scannerContainer" style="display: none;">
+                    <video id="scannerVideo" width="100%" playsinline style="border-radius: 10px;"></video>
+                    <canvas id="scannerCanvas" style="display: none;"></canvas>
+                </div>
+                
+                <div class="mt-3">
+                    <h5 class="text-white">Detected Code:</h5>
+                    <div class="bg-white p-3 rounded" id="detectedCode">
+                        <p class="mb-0">No code detected yet</p>
+                    </div>
+                </div>
+                
+                <div class="mt-3" id="scanResultActions" style="display: none;">
+                    <button class="btn btn-success" onclick="lookupOrder()">
+                        <i class="fas fa-search me-2"></i>Lookup Order
+                    </button>
+                </div>
                     </div>
                 </div>
             </div>
+    
         </div>
+        
 
+        <!-- Add this modal for order lookup results -->
+<div class="modal fade" id="orderLookupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderLookupResult">
+                <!-- Order details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+        
         <!-- Status Display -->
         <div id="statusDisplay" class="row justify-content-center" style="display: none;">
             <div class="col-lg-8">
@@ -306,7 +434,7 @@
                     </div>
 
                     <!-- Status Timeline -->
-                    <div class="status-timeline">
+                    <div class="status-timeline" >
                         <div class="timeline-item completed" data-status="received">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-white">
@@ -362,86 +490,7 @@
         </div>
     </div>
 
-    <!-- Generate QR Section -->
-    <div id="generateQR" class="container py-4" style="display: none;">
-        <div class="page-header text-center text-white">
-            <h1 class="display-4 fw-bold mb-3">Generate QR Code</h1>
-            <p class="lead">Create QR codes for tracking laundry orders</p>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="glass-card p-4 text-center">
-                    <h4 class="text-white mb-4">
-                        <i class="fas fa-qrcode me-2"></i>Generate QR Code
-                    </h4>
-                    <div class="mb-3">
-                        <input type="text" class="form-control form-control-lg" id="qrTrackingCode" 
-                               placeholder="Enter tracking code">
-                    </div>
-                    <button class="btn btn-gradient btn-lg mb-4" onclick="generateQR()">
-                        <i class="fas fa-magic me-2"></i>Generate QR Code
-                    </button>
-                    <div id="qrCodeDisplay" class="qr-code-container mx-auto" style="display: none;">
-                        <div id="qrcode"></div>
-                        <p class="mt-2 mb-0 text-dark">Tracking: <span id="qrTrackingText"></span></p>
-                    </div>
-                    <div id="qrActions" class="mt-3" style="display: none;">
-                        <button class="btn btn-success" onclick="printQR()">
-                            <i class="fas fa-print me-2"></i>Print
-                        </button>
-                        <button class="btn btn-info" onclick="downloadQR()">
-                            <i class="fas fa-download me-2"></i>Download
-                        </button>
-                        <button class="btn btn-secondary" onclick="showCustomerView()">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Tracking
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-        <!-- Admin Panel View -->
-    <div id="adminPanel" class="container py-4" style="display: none;">
-        <div class="page-header text-center text-white">
-            <h1 class="display-4 fw-bold mb-3">Admin Panel</h1>
-            <p class="lead">Manage laundry orders and send notifications</p>
-        </div>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="glass-card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="text-white mb-0">
-                            <i class="fas fa-list me-2"></i>All Orders
-                        </h4>
-                        <button class="btn btn-gradient" onclick="refreshOrders()">
-                            <i class="fas fa-refresh me-2"></i>Refresh
-                        </button>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Tracking Code</th>
-                                    <th>Customer</th>
-                                    <th>Contact</th>
-                                    <th>Service</th>
-                                    <th>Status</th>
-                                    <th>Notifications</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ordersTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+ 
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -457,6 +506,48 @@
             if (!trackingCode) {
                 alert('Please enter a tracking code.');
                 return;
+            }
+            // Add status update functionality to table actions
+            function updateTableRow(doc) {
+                const data = doc.data();
+                return `
+                    <tr>
+                        <td>${data.trackingCode}</td>
+                        <td>${data.customerName}</td>
+                        <td>${data.contact || 'N/A'}</td>
+                        <td>${getServiceTypeName(data.serviceType)}</td>
+                        <td>
+                            <select class="form-select" onchange="updateStatus('${doc.id}', this.value)">
+                                <option value="received" ${data.status === 'received' ? 'selected' : ''}>Received</option>
+                                <option value="washing" ${data.status === 'washing' ? 'selected' : ''}>Washing</option>
+                                <option value="drying" ${data.status === 'drying' ? 'selected' : ''}>Drying</option>
+                                <option value="ready" ${data.status === 'ready' ? 'selected' : ''}>Ready</option>
+                                <option value="completed" ${data.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </td>
+                        <td>${data.notifications || 0}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteOrder('${doc.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            async function updateStatus(orderId, newStatus) {
+                try {
+                    const orderRef = doc(db, "laundryOrders", orderId);
+                    const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    await updateDoc(orderRef, {
+                        status: newStatus,
+                        [`timestamps.${newStatus}`]: timestamp
+                    });
+                    refreshOrders();
+                } catch (error) {
+                    console.error("Error updating status:", error);
+                    alert("Failed to update status");
+                }
             }
 
             const statusDisplay = document.getElementById('statusDisplay');
@@ -561,105 +652,264 @@
             return serviceMap[serviceType] || serviceType;
         }
 
-        // Simulate QR scan
-        function simulateQRScan() {
-            const trackingCode = prompt('Please enter the tracking code from the QR code:');
-            if (trackingCode) {
-                document.getElementById('trackingCode').value = trackingCode;
-                trackLaundry();
-            }
+   
+
+
+ 
+let scannerActive = false;
+let videoStream = null;
+let barcodeDetector = null;
+let lastDetectionTime = 0;
+let detectedTrackingCode = '';
+
+// Add this after your existing functions
+async function initializeScanner() {
+    // Check if BarcodeDetector API is available
+    if ('BarcodeDetector' in window) {
+        barcodeDetector = new BarcodeDetector({
+            formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e']
+        });
+    } else {
+        console.warn('BarcodeDetector API not supported');
+    }
+    
+    // Set up event listeners
+    document.getElementById('startScanner').addEventListener('click', startScanner);
+    document.getElementById('stopScanner').addEventListener('click', stopScanner);
+}
+
+async function startScanner() {
+    try {
+        const scanType = document.getElementById('scanType').value;
+        const video = document.getElementById('scannerVideo');
+        
+        // Request camera access
+        videoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        });
+        
+        video.srcObject = videoStream;
+        await video.play();
+        
+        document.getElementById('scannerContainer').style.display = 'block';
+        document.getElementById('startScanner').style.display = 'none';
+        document.getElementById('stopScanner').style.display = 'inline-block';
+        
+        scannerActive = true;
+        detectedTrackingCode = '';
+        document.getElementById('detectedCode').innerHTML = '<p class="mb-0">No code detected yet</p>';
+        document.getElementById('scanResultActions').style.display = 'none';
+        
+        // Start detection loop
+        if (scanType === 'barcode') {
+            detectBarcode();
+        } else {
+            detectText();
         }
+    } catch (error) {
+        console.error('Error starting scanner:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Camera Error',
+            text: 'Could not access the camera. Please ensure you have granted camera permissions.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
 
-        // Generate QR code
-        function generateQR() {
-            const trackingCode = document.getElementById('qrTrackingCode').value.trim();
-            if (!trackingCode) {
-                alert('Please enter a tracking code.');
-                return;
-            }
+function stopScanner() {
+    scannerActive = false;
+    
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    
+    document.getElementById('scannerContainer').style.display = 'none';
+    document.getElementById('startScanner').style.display = 'inline-block';
+    document.getElementById('stopScanner').style.display = 'none';
+    
+    const video = document.getElementById('scannerVideo');
+    video.srcObject = null;
+}
 
-            const qrCodeDisplay = document.getElementById('qrCodeDisplay');
-            const qrTrackingText = document.getElementById('qrTrackingText');
-            const qrActions = document.getElementById('qrActions');
-            const qrCodeContainer = document.getElementById('qrcode');
-            qrCodeContainer.innerHTML = '';
+document.addEventListener('DOMContentLoaded', function() {
+    initializeScanner();
+});
 
-            try {
-                const qr = new QRCode(qrCodeContainer, {
-                    text: trackingCode,
-                    width: 200,
-                    height: 200,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-
-                qrTrackingText.textContent = trackingCode;
-                qrCodeDisplay.style.display = 'block';
-                qrActions.style.display = 'block';
-                
-            } catch (error) {
-                console.error('Error generating QR code:', error);
-                alert('Failed to generate QR code.');
-            }
-        }
-
-        // Print QR code
-        function printQR() {
-            const qrCanvas = document.getElementById('qrCanvas');
-            const printWindow = window.open('', '', 'width=600,height=400');
-            printWindow.document.write('<html><head><title>Print QR Code</title></head>');
-            printWindow.document.write('<body style="text-align: center;">');
-            printWindow.document.write('<h2>QR Code for Tracking</h2>');
-            printWindow.document.write(qrCanvas.outerHTML);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
-        }
-
-        // Download QR code
-        function downloadQR() {
-            const qrCodeContainer = document.getElementById('qrcode');
-            const trackingCode = document.getElementById('qrTrackingText').textContent;
-            const canvas = qrCodeContainer.querySelector('canvas');
+async function detectBarcode() {
+    if (!scannerActive) return;
+    
+    const video = document.getElementById('scannerVideo');
+    const canvas = document.getElementById('scannerCanvas');
+    const context = canvas.getContext('2d');
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    try {
+        if (barcodeDetector) {
+            const barcodes = await barcodeDetector.detect(canvas);
             
-            if (!canvas) {
-                alert('No QR code to download');
-                return;
+            if (barcodes.length > 0) {
+                const now = Date.now();
+                // Only process if it's been at least 1 second since last detection
+                if (now - lastDetectionTime > 1000) {
+                    lastDetectionTime = now;
+                    
+                    // Get the most central barcode
+                    const barcode = barcodes.reduce((prev, curr) => {
+                        const prevDist = Math.sqrt(
+                            Math.pow(prev.boundingBox.x + prev.boundingBox.width/2 - canvas.width/2, 2) + 
+                            Math.pow(prev.boundingBox.y + prev.boundingBox.height/2 - canvas.height/2, 2)
+                        );
+                        const currDist = Math.sqrt(
+                            Math.pow(curr.boundingBox.x + curr.boundingBox.width/2 - canvas.width/2, 2) + 
+                            Math.pow(curr.boundingBox.y + curr.boundingBox.height/2 - canvas.height/2, 2)
+                        );
+                        return currDist < prevDist ? curr : prev;
+                    });
+                    
+                    detectedTrackingCode = barcode.rawValue;
+                    displayDetectedCode(detectedTrackingCode);
+                }
             }
-
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = `LaundryTrack_QR_${trackingCode}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
+    } catch (error) {
+        console.error('Barcode detection error:', error);
+    }
+    
+    // Continue detection loop
+    if (scannerActive) {
+        requestAnimationFrame(detectBarcode);
+    }
+}
 
-        // Show generate QR section
-        function showGenerateQR() {
-            document.getElementById('customerView').style.display = 'none';
-            document.getElementById('generateQR').style.display = 'block';
-        }
-
-        // Show customer view section
-        function showCustomerView() {
-            document.getElementById('generateQR').style.display = 'none';
-            document.getElementById('customerView').style.display = 'block';
-        }
-
-        // Allow Enter key to trigger tracking
-        document.getElementById('trackingCode').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                trackLaundry();
+async function detectText() {
+    if (!scannerActive) return;
+    
+    const video = document.getElementById('scannerVideo');
+    const canvas = document.getElementById('scannerCanvas');
+    const context = canvas.getContext('2d');
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    try {
+        // Use Tesseract.js for text recognition
+        const worker = await Tesseract.createWorker();
+        await worker.loadLanguage('eng');
+        await worker.initialize('eng');
+        
+        const { data: { text } } = await worker.recognize(canvas);
+        await worker.terminate();
+        
+        if (text) {
+            const now = Date.now();
+            // Only process if it's been at least 1 second since last detection
+            if (now - lastDetectionTime > 1000) {
+                lastDetectionTime = now;
+                
+                // Look for tracking code pattern (LT- followed by 6 alphanumeric chars)
+                const trackingCodeMatch = text.match(/LT-[A-Z0-9]{6}/i);
+                if (trackingCodeMatch) {
+                    detectedTrackingCode = trackingCodeMatch[0].toUpperCase();
+                    displayDetectedCode(detectedTrackingCode);
+                }
             }
+        }
+    } catch (error) {
+        console.error('Text recognition error:', error);
+    }
+    
+    // Continue detection loop
+    if (scannerActive) {
+        requestAnimationFrame(detectText);
+    }
+}
+
+function displayDetectedCode(code) {
+    const detectedCodeDiv = document.getElementById('detectedCode');
+    detectedCodeDiv.innerHTML = `
+        <h4 class="text-success">${code}</h4>
+        <p class="mb-0 text-muted">Detected at ${new Date().toLocaleTimeString()}</p>
+    `;
+    document.getElementById('scanResultActions').style.display = 'block';
+}
+
+async function lookupOrder() {
+    if (!detectedTrackingCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'No Code Detected',
+            text: 'Please scan a valid tracking code first',
+            confirmButtonText: 'OK'
         });
-
-        document.getElementById('qrTrackingCode').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                generateQR();
-            }
+        return;
+    }
+    
+    try {
+        // Find order with this tracking code
+        const order = Object.values(laundryData).find(o => o.trackingCode === detectedTrackingCode);
+        
+        if (order) {
+            const modal = new bootstrap.Modal(document.getElementById('orderLookupModal'));
+            const resultDiv = document.getElementById('orderLookupResult');
+            
+            const statusClass = `status-${order.status || 'received'}`;
+            const statusText = (order.status || 'received').charAt(0).toUpperCase() + (order.status || 'received').slice(1);
+            
+            resultDiv.innerHTML = `
+                <h5>Order Details</h5>
+                <p><strong>Tracking Code:</strong> ${order.trackingCode}</p>
+                <p><strong>Customer:</strong> ${order.customerName}</p>
+                <p><strong>Phone:</strong> ${order.phoneNumber}</p>
+                <p><strong>Email:</strong> ${order.email || 'N/A'}</p>
+                <p><strong>Service:</strong> ${getServiceTypeName(order.serviceType)} (${order.weight}kg)</p>
+                <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span></p>
+                <p><strong>Pickup:</strong> ${formatDate(order.pickupDate)} at ${order.pickupTime}</p>
+                ${order.instructions ? `<p><strong>Instructions:</strong> ${order.instructions}</p>` : ''}
+                
+                <div class="mt-3">
+                    <button class="btn btn-primary" onclick="updateOrderStatus('${order.id}')">
+                        Update Status
+                    </button>
+                </div>
+            `;
+            
+            modal.show();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Order Not Found',
+                text: `No order found with tracking code: ${detectedTrackingCode}`,
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        console.error('Order lookup error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to lookup order information',
+            confirmButtonText: 'OK'
         });
-    </script>
+    }
+}
+</script>
+   
 </body>
 </html>

@@ -6,7 +6,10 @@
     <title>LaundryTrack - Admin Panel</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+ <!-- <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+  
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
@@ -51,6 +54,9 @@
             --danger-color: #ef4444;
             --info-color: #06b6d4;
         }
+
+        /* Add these to your existing styles */
+
 
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -193,6 +199,85 @@
         .text-muted {
             color: white;
         }
+
+        #barcodeCanvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.receipt-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.receipt-header {
+    border-bottom: 2px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.receipt-header h3 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.receipt-details {
+    color: #444;
+}
+
+.receipt-details p {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.receipt-items {
+    margin: 20px 0;
+}
+
+.receipt-items table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.receipt-items th {
+    background-color: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.receipt-items td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.receipt-footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+    color: #666;
+}
+
+.receipt-footer .small {
+    font-size: 14px;
+    color: #999;
+}
+
+@media print {
+    .receipt-container {
+        box-shadow: none;
+    }
+    
+    .modal-footer,
+    .btn-close {
+        display: none !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -232,7 +317,7 @@
                            <i class="fas fa-list me-2"></i>Manage Orders
                        </button>
                        <button class="btn btn-outline-light" onclick="showAdminSection('generateQR', event)">
-                           <i class="fas fa-qrcode me-2"></i>Generate QR
+                           <i class="fas fa-barcode me-2"></i>Generate Barcode
                        </button>
                     </div>
                 </div>
@@ -327,41 +412,9 @@
             </div>
         </div>
 
-        <!-- Generate QR Section -->
-        <div id="generateQR" class="admin-section" style="display: none;">
-            <div class="row justify-content-center">
-                <div class="col-lg-6">
-                    <div class="glass-card p-4 text-center">
-                        <h4 class="text-white mb-4">
-                            <i class="fas fa-qrcode me-2"></i>Generate QR Code
-                        </h4>
-                        <div class="mb-3">
-                            <input type="text" class="form-control form-control-lg" id="qrTrackingCode" 
-                                   placeholder="Enter tracking code">
-                        </div>
-                        <button class="btn btn-gradient btn-lg mb-4" onclick="generateQR()">
-                            <i class="fas fa-magic me-2"></i>Generate QR Code
-                        </button>
-                        <div id="qrCodeDisplay" class="qr-code-container mx-auto" style="display: none;">
-                            <div id="qrcode"></div>
-                            <p class="mt-2 mb-0 text-dark">Tracking: <span id="qrTrackingText"></span></p>
-                        </div>
-                        <div id="qrActions" class="mt-3" style="display: none;">
-                            <button class="btn btn-success" onclick="printQR()">
-                                <i class="fas fa-print me-2"></i>Print
-                            </button>
-                            <button class="btn btn-info" onclick="downloadQR()">
-                                <i class="fas fa-download me-2"></i>Download
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
      <!-- Notification Modal -->
-    <div class="modal fade" id="notificationModal" tabindex="-1">
+   <div class="modal fade" id="notificationModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content notification-modal">
                 <div class="modal-header">
@@ -412,6 +465,107 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Replace the Generate QR Section with this Barcode Scanner Section -->
+<div id="generateQR" class="admin-section" style="display: none;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="glass-card p-4 text-center">
+                <h4 class="text-white mb-4">
+                    <i class="fas fa-barcode me-2"></i>Barcode Scanner
+                </h4>
+                <div class="mb-3">
+                    <label class="form-label text-white">Enter Tracking Code</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="trackingInput" placeholder="Enter tracking code (e.g., LT-ABC123)">
+                        <button class="btn btn-gradient" onclick="generateBarcode(document.getElementById('trackingInput').value)">
+                            <i class="fas fa-barcode me-2"></i>Generate Barcode
+                        </button>
+                        </div>
+                         <div id="barcodeDisplay" class="mt-3 text-center" style="display: none;">
+                                <canvas id="barcodeCanvas"></canvas>
+                                <p class="text-white mt-2">Tracking Code: <span id="trackingText"></span></p>
+                                <button class="btn btn-light mt-2" onclick="printBarcode()">
+                                    <i class="fas fa-print me-2"></i>Print Barcode
+                                </button>
+                                <button class="btn btn-light mt-2 ms-2" onclick="downloadBarcode()">
+    <i class="fas fa-download me-2"></i>Download
+</button>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="receiptContent">
+                <div class="receipt-container">
+                    <div class="receipt-header text-center">
+                        <h3>Flip N Fold Laundry</h3>
+                        <p>Official Receipt</p>
+                        <hr>
+                    </div>
+                    <div class="receipt-details">
+                        <p><strong>Tracking Code:</strong> <span id="receipt-tracking"></span></p>
+                        <p><strong>Date:</strong> <span id="receipt-date"></span></p>
+                        <p><strong>Customer:</strong> <span id="receipt-customer"></span></p>
+                        <div class="receipt-items">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Weight</th>
+                                        <th>Rate</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="receipt-items">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td id="receipt-subtotal"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Tax (12%):</strong></td>
+                                        <td id="receipt-tax"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td id="receipt-total"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="receipt-footer text-center mt-4">
+                            <p>Thank you for choosing Flip N Fold!</p>
+                            <p class="small">Keep this receipt for pickup reference</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="printReceipt()">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
     <div id="emailConfirmationFrame" style="display: none;"></div>
 
@@ -472,6 +626,7 @@
                 // Get form values
                 const customerName = document.getElementById('customerName').value.trim();
                 const phoneNumber = document.getElementById('phoneNumber').value.trim();
+                 const email = document.getElementById('email').value.trim();
                 const serviceType = document.getElementById('serviceType').value;
                 const weight = parseFloat(document.getElementById('weight').value);
                 const pickupDate = document.getElementById('pickupDate').value;
@@ -494,6 +649,7 @@
                     trackingCode,
                     customerName,
                     phoneNumber,
+                    email,
                     serviceType,
                     weight,
                     pickupDate,
@@ -521,6 +677,8 @@
                     confirmButtonText: 'OK'
                 });
 
+                showReceipt(docRef.id);
+
                 // Reset form
                 document.getElementById('newTransactionForm').reset();
                 
@@ -529,10 +687,6 @@
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 document.getElementById('pickupDate').valueAsDate = tomorrow;
 
-                // Generate QR code automatically
-                showAdminSection('generateQR', null);
-                document.getElementById('qrTrackingCode').value = trackingCode;
-                generateQR();
 
                 // Refresh orders table
                 await loadData();
@@ -547,6 +701,87 @@
                 });
             }
         }
+
+
+
+        // Function to show receipt
+function showReceipt(orderId) {
+    const order = laundryData[orderId];
+    if (!order) return;
+
+    // Calculate rates based on service type
+    const rates = {
+        'wash-only': 35,
+        'wash-dry': 50,
+        'dry-clean': 75,
+        'iron-only': 25
+    };
+
+    const rate = rates[order.serviceType] || 35;
+    const amount = rate * order.weight;
+    const tax = amount * 0.12;
+    const total = amount + tax;
+
+    // Update receipt content
+    document.getElementById('receipt-tracking').textContent = order.trackingCode;
+    document.getElementById('receipt-date').textContent = new Date().toLocaleDateString();
+    document.getElementById('receipt-customer').textContent = order.customerName;
+
+    // Update receipt items
+    const itemsTable = document.getElementById('receipt-items');
+    itemsTable.innerHTML = `
+        <tr>
+            <td>${getServiceTypeName(order.serviceType)}</td>
+            <td>${order.weight} kg</td>
+            <td>₱${rate.toFixed(2)}/kg</td>
+            <td>₱${amount.toFixed(2)}</td>
+        </tr>
+    `;
+
+    // Update totals
+    document.getElementById('receipt-subtotal').textContent = `₱${amount.toFixed(2)}`;
+    document.getElementById('receipt-tax').textContent = `₱${tax.toFixed(2)}`;
+    document.getElementById('receipt-total').textContent = `₱${total.toFixed(2)}`;
+
+    // Show modal
+    const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+    receiptModal.show();
+}
+
+// Function to print receipt
+function printReceipt() {
+    const receiptContent = document.getElementById('receiptContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Laundry Receipt</title>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body { padding: 20px; }
+                @media print {
+                    .modal-footer { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            ${receiptContent}
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() {
+                        window.close();
+                    }
+                }
+            <\/script>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+}
 
         function showAdminSection(sectionId, event) {
             // Hide all sections
@@ -574,237 +809,210 @@
             }
         }
 
-        function generateQR() {
-            const trackingCode = document.getElementById('qrTrackingCode').value.trim();
-            
-            if (!trackingCode) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please enter a valid tracking code',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
 
-            // Check if the tracking code exists in your database
-            const orderExists = Object.values(laundryData).some(order => order.trackingCode === trackingCode);
-            
-            if (!orderExists) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Tracking code not found in database',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
 
-            // Clear previous QR code
-            const qrCodeContainer = document.getElementById('qrcode');
-            qrCodeContainer.innerHTML = '';
-            
-            // Generate new QR code
-            try {
-                const qr = qrcode(0, 'M');
-                qr.addData(trackingCode);
-                qr.make();
-                qrCodeContainer.innerHTML = qr.createImgTag(4);
-
-                document.getElementById('qrCodeDisplay').style.display = 'block';
-                document.getElementById('qrActions').style.display = 'block';
-                document.getElementById('qrTrackingText').textContent = trackingCode;
-            } catch (error) {
-                console.error("QR Generation Error:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'QR Generation Failed',
-                    text: 'Could not generate QR code. Please try again.',
-                    confirmButtonText: 'OK'
-                });
-            }
+function updateOrderStatus(orderId) {
+    const order = laundryData[orderId];
+    if (!order) return;
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('orderLookupModal'));
+    
+    Swal.fire({
+        title: 'Update Order Status',
+        input: 'select',
+        inputOptions: {
+            'received': 'Received',
+            'processing': 'Processing',
+            'completed': 'Completed'
+        },
+        inputValue: order.status || 'received',
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        preConfirm: (status) => {
+            return updateOrderStatusInFirebase(orderId, status);
         }
-
-        function printQR() {
-            const qrImg = document.querySelector('#qrcode img');
-            const trackingCode = document.getElementById('qrTrackingText').textContent;
-            
-            if (!qrImg) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No QR code to print',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>QR Code - ${trackingCode}</title>
-                    <style>
-                        body { text-align: center; padding: 20px; font-family: Arial, sans-serif; }
-                        h3 { margin-bottom: 10px; }
-                        img { margin: 10px auto; display: block; }
-                    </style>
-                </head>
-                <body>
-                    <h3>LaundryTrack QR Code</h3>
-                    <p>Tracking: ${trackingCode}</p>
-                    <img src="${qrImg.src}" alt="QR Code">
-                    <script>
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                                window.close();
-                            }, 500);
-                        }
-                    <\/script>
-                </body>
-                </html>`);
-            
-            printWindow.document.close();
-        }
-
-        function downloadQR() {
-            const qrImg = document.querySelector('#qrcode img');
-            const trackingCode = document.getElementById('qrTrackingText').textContent;
-            
-            if (!qrImg) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No QR code to download',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-            
-            const link = document.createElement('a');
-            link.download = `LaundryTrack-QR-${trackingCode}.png`;
-            link.href = qrImg.src;
-            link.click();
-        }
-
-        function loadOrdersTable() {
-            const tbody = document.getElementById('loadOrdersTable');
-            tbody.innerHTML = ''; 
-
-            const sortedOrders = Object.values(laundryData).sort((a, b) => 
-                new Date(b.createdAt) - new Date(a.createdAt)
-            );
-
-            sortedOrders.forEach(order => {
-                const tr = document.createElement('tr');
-                const statusClass = `status-${order.status || 'received'}`;
-                const statusText = (order.status || 'received').charAt(0).toUpperCase() + (order.status || 'received').slice(1);
-                
-                tr.innerHTML = `
-                    <td><strong>${order.trackingCode}</strong></td>
-                    <td>${order.customerName}<br><small class="text-muted">${order.phoneNumber}</small></td>
-                    <td>${getServiceTypeName(order.serviceType)}<br><small class="text-muted">${order.weight}kg</small></td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>${formatDate(order.pickupDate)}<br><small class="text-muted">${order.pickupTime}</small></td>
-                    <td>
-                        ${order.status !== 'completed' ? 
-                            `<button class="btn btn-sm btn-success mark-done me-1" data-id="${order.id}">
-                                <i class="fas fa-check"></i> Complete
-                            </button>` : 
-                            '<span class="text-success"><i class="fas fa-check-circle"></i> Done</span>'
-                        }
-                        <button class="btn btn-sm btn-danger delete-order" data-id="${order.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Status Updated',
+                text: `Order status updated to ${result.value}`,
+                confirmButtonText: 'OK'
             });
-
-            // Add event listeners for action buttons
-            document.querySelectorAll('.mark-done').forEach(button => {
-                button.addEventListener('click', async function() {
-                    const orderId = this.getAttribute('data-id');
-                    const order = laundryData[orderId];
-                    
-                    try {
-                        const orderRef = doc(db, "laundryOrders", orderId);
-                        await updateDoc(orderRef, {
-                            status: 'completed',
-                            timestamps: {
-                                ...order.timestamps,
-                                completed: new Date().toLocaleString()
-                            }
-                        });
-                        
-                        // Update local data
-                        laundryData[orderId].status = 'completed';
-                        laundryData[orderId].timestamps.completed = new Date().toLocaleString();
-                        
-                        loadOrdersTable();
-                        
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Order Completed',
-                            text: `Order ${order.trackingCode} has been marked as completed`,
-                            confirmButtonText: 'OK',
-                            timer: 2000
-                        });
-                    } catch (error) {
-                        console.error("Error updating order:", error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Failed to update order status',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                });
-            });
-
-            document.querySelectorAll('.delete-order').forEach(button => {
-                button.addEventListener('click', async function() {
-                    const orderId = this.getAttribute('data-id');
-                    const order = laundryData[orderId];
-                    
-                    const result = await Swal.fire({
-                        title: 'Confirm Delete',
-                        text: `Are you sure you want to delete order ${order.trackingCode}?`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#ef4444'
-                    });
-                    
-                    if (result.isConfirmed) {
-                        try {
-                            await deleteDoc(doc(db, "laundryOrders", orderId));
-                            delete laundryData[orderId];
-                            loadOrdersTable();
-                            
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: 'The order has been deleted.',
-                                confirmButtonText: 'OK',
-                                timer: 2000
-                            });
-                        } catch (error) {
-                            console.error("Error deleting order:", error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Failed to delete order',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    }
-                });
-            });
+            
+            if (modal) {
+                modal.hide();
+            }
         }
+    });
+}
+
+async function updateOrderStatusInFirebase(orderId, status) {
+    try {
+        const orderRef = doc(db, "laundryOrders", orderId);
+        await updateDoc(orderRef, {
+            status: status,
+            timestamps: {
+                ...laundryData[orderId].timestamps,
+                [status]: new Date().toLocaleString()
+            }
+        });
+        
+        // Update local data
+        laundryData[orderId].status = status;
+        laundryData[orderId].timestamps[status] = new Date().toLocaleString();
+        
+        return status;
+    } catch (error) {
+        console.error('Error updating status:', error);
+        throw new Error('Failed to update status');
+    }
+}
+
+// Initialize the scanner when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    initializeScanner();
+    
+    // Load Tesseract.js when text recognition is selected
+    document.getElementById('scanType').addEventListener('change', function() {
+        if (this.value === 'text' && !window.Tesseract) {
+            // Load Tesseract.js dynamically
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+            document.head.appendChild(script);
+        }
+    });
+});
+
+
+
+// Function to generate a barcode from the tracking code
+function generateBarcode(trackingCode) {
+    if (!trackingCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please enter a valid tracking code',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    try {
+        const canvas = document.getElementById('barcodeCanvas');
+        const container = document.getElementById('barcodeDisplay');
+        
+        // Clear previous barcode
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Use JsBarcode to generate the barcode
+        JsBarcode(canvas, trackingCode, {
+            format: "CODE128", // Most versatile barcode format
+            width: 2,
+            height: 100,
+            displayValue: true,
+            fontSize: 16,
+            margin: 10,
+            background: "#ffffff",
+            lineColor: "#000000"
+        });
+
+        // Update the display
+        document.getElementById('trackingText').textContent = trackingCode;
+        container.style.display = 'block';
+
+    } catch (error) {
+        console.error('Barcode generation error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Barcode Generation Failed',
+            text: 'There was an error generating the barcode. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+
+// Function to print the barcode
+function printBarcode() {
+    const canvas = document.getElementById('barcodeCanvas');
+    const trackingCode = document.getElementById('trackingText').textContent;
+    
+    if (!canvas || !trackingCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No barcode to print',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Barcode - ${trackingCode}</title>
+            <style>
+                body { text-align: center; padding: 20px; font-family: Arial, sans-serif; }
+                h3 { margin-bottom: 10px; }
+                img { margin: 10px auto; display: block; }
+                @media print {
+                    body { padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <h3>LaundryTrack Barcode</h3>
+            <p>Tracking: ${trackingCode}</p>
+            <img src="${canvas.toDataURL('image/png')}" alt="Barcode">
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 200);
+                }
+            <\/script>
+            <p>Thank you for Trusting our service!</p>
+        </body>
+        </html>`);
+    
+    printWindow.document.close();
+}
+
+// Function to download the barcode
+function downloadBarcode() {
+    const canvas = document.getElementById('barcodeCanvas');
+    const trackingCode = document.getElementById('trackingText').textContent;
+    
+    if (!canvas || !trackingCode) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No barcode to download',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    const link = document.createElement('a');
+    link.download = `LaundryTrack-Barcode-${trackingCode}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// Add this to your initialization code
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up canvas dimensions
+    const canvas = document.getElementById('barcodeCanvas');
+    canvas.width = 300;
+    canvas.height = 150;
+    
+   
+});
+        
 
         function getServiceTypeName(serviceType) {
             const serviceMap = {
@@ -1033,7 +1241,15 @@
                 <td><strong>${order.trackingCode}</strong></td>
                 <td>${order.customerName}<br><small class="text-muted">${order.phoneNumber}</small><br><small class="text-info">${order.email || 'No Email'}</small></td>
                 <td>${getServiceTypeName(order.serviceType)}<br><small class="text-muted">${order.weight}kg</small></td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+               <td>
+    <select class="form-select form-select-sm status-select" data-id="${order.id}">
+         <option value="received" ${order.status === 'received' ? 'selected' : ''}>Received</option>
+            <option value="washing" ${order.status === 'washing' ? 'selected' : ''}>Washing</option>
+            <option value="drying" ${order.status === 'drying' ? 'selected' : ''}>Drying</option>
+            <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready for Pickup</option>
+            <option value="picked-up" ${order.status === 'picked-up' ? 'selected' : ''}>Picked Up</option>
+    </select>
+</td>
                 <td>${formatDate(order.pickupDate)}<br><small class="text-muted">${order.pickupTime}</small></td>
                 <td>
                     <button class="btn btn-sm btn-send send-notification-btn" data-id="${order.id}" 
@@ -1158,6 +1374,44 @@
 
         document.querySelector('#notificationModal .btn-gradient').addEventListener('click', sendNotification);
     });
+document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', async function() {
+        const orderId = this.getAttribute('data-id');
+        const newStatus = this.value;
+        const order = laundryData[orderId];
+        try {
+            const orderRef = doc(db, "laundryOrders", orderId);
+            await updateDoc(orderRef, {
+                status: newStatus,
+                timestamps: {
+                    ...order.timestamps,
+                    [newStatus]: new Date().toLocaleString()
+                }
+            });
+            laundryData[orderId].status = newStatus;
+            laundryData[orderId].timestamps[newStatus] = new Date().toLocaleString();
+            loadOrdersTable();
+            Swal.fire({
+                icon: 'success',
+                title: 'Status Updated',
+                text: `Order ${order.trackingCode} status updated to ${newStatus}`,
+                confirmButtonText: 'OK',
+                timer: 2000
+            });
+        } catch (error) {
+            console.error("Error updating status:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update order status',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+});
+
+
+    
     </script>
 </body>
 </html>

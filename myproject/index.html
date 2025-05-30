@@ -11,12 +11,11 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <script type="module">
-        // Import Firebase modules
+       
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
         import { getFirestore, collection, addDoc, updateDoc, doc, getDoc, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDT4kkrrr_b1oThap6A_Y1Ry0ub4aBDjt0",
             authDomain: "laundry-tracking-system.firebaseapp.com",
@@ -27,12 +26,11 @@
             measurementId: "G-VLXNQRRGJK"
         };
 
-        // Initialize Firebase
+      
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // Make Firebase functions available globally
         window.db = db;
         window.getDocs = getDocs;
         window.collection = collection;
@@ -234,7 +232,7 @@
         
 
 
-        /* Barcode Scanner Section Styles */
+       
 #scannerContainer {
     position: relative;
     margin: 0 auto;
@@ -307,7 +305,7 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
+
     <nav class="navbar navbar-expand-lg admin-nav">
         <div class="container">
             <a class="navbar-brand text-white fw-bold" href="#">
@@ -324,14 +322,13 @@
         </div>
     </nav>
 
-    <!-- Customer Status View -->
     <div id="customerView" class="container py-4">
         <div class="page-header text-center text-white">
             <h1 class="display-4 fw-bold mb-3">Track Your Laundry</h1>
             <p class="lead">Enter your tracking code or scan the QR code from your receipt</p>
         </div>
 
-        <!-- QR Code Scanner Section -->
+       
         <div class="row justify-content-center mb-4">
             <div class="col-md-8">
                 <div class="glass-card p-4">
@@ -387,7 +384,7 @@
         </div>
         
 
-        <!-- Add this modal for order lookup results -->
+     
 <div class="modal fade" id="orderLookupModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -396,7 +393,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="orderLookupResult">
-                <!-- Order details will be populated here -->
+               
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -407,7 +404,7 @@
 
         </div>
         
-        <!-- Status Display -->
+       
         <div id="statusDisplay" class="row justify-content-center" style="display: none;">
             <div class="col-lg-8">
                 <div class="glass-card p-4 fade-in">
@@ -433,7 +430,7 @@
                         </div>
                     </div>
 
-                    <!-- Status Timeline -->
+                   
                     <div class="status-timeline" >
                         <div class="timeline-item completed" data-status="received">
                             <div class="d-flex justify-content-between align-items-center">
@@ -492,7 +489,7 @@
 
  
 
-    <!-- Bootstrap JS -->
+   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -500,14 +497,14 @@
         let currentOrderId = null;
         let currentOrderData = null;
 
-        // Track laundry function
+     
         async function trackLaundry() {
             const trackingCode = document.getElementById('trackingCode').value.trim();
             if (!trackingCode) {
                 alert('Please enter a tracking code.');
                 return;
             }
-            // Add status update functionality to table actions
+           
             function updateTableRow(doc) {
                 const data = doc.data();
                 return `
@@ -581,7 +578,7 @@
             }
         }
 
-        // Update status badge
+       
         function updateStatusBadge(status) {
             const currentStatusBadge = document.getElementById('currentStatusBadge');
             const statusText = status.charAt(0).toUpperCase() + status.slice(1);
@@ -614,7 +611,7 @@
             }
         }
 
-        // Update timeline
+     
         function updateTimeline(data) {
             const statuses = ['received', 'washing', 'drying', 'ready', 'completed'];
             const currentStatusIndex = statuses.indexOf(data.status || 'received');
@@ -641,7 +638,7 @@
             });
         }
 
-        // Get service type name
+    
         function getServiceTypeName(serviceType) {
             const serviceMap = {
                 'wash-only': 'Wash Only',
@@ -662,7 +659,7 @@ let barcodeDetector = null;
 let lastDetectionTime = 0;
 let detectedTrackingCode = '';
 
-// Add this after your existing functions
+
 async function initializeScanner() {
     // Check if BarcodeDetector API is available
     if ('BarcodeDetector' in window) {
@@ -673,7 +670,7 @@ async function initializeScanner() {
         console.warn('BarcodeDetector API not supported');
     }
     
-    // Set up event listeners
+  
     document.getElementById('startScanner').addEventListener('click', startScanner);
     document.getElementById('stopScanner').addEventListener('click', stopScanner);
 }
@@ -683,7 +680,7 @@ async function startScanner() {
         const scanType = document.getElementById('scanType').value;
         const video = document.getElementById('scannerVideo');
         
-        // Request camera access
+    
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: 'environment',
@@ -705,7 +702,7 @@ async function startScanner() {
         document.getElementById('detectedCode').innerHTML = '<p class="mb-0">No code detected yet</p>';
         document.getElementById('scanResultActions').style.display = 'none';
         
-        // Start detection loop
+       
         if (scanType === 'barcode') {
             detectBarcode();
         } else {
@@ -748,12 +745,11 @@ async function detectBarcode() {
     const video = document.getElementById('scannerVideo');
     const canvas = document.getElementById('scannerCanvas');
     const context = canvas.getContext('2d');
-    
-    // Set canvas dimensions to match video
+ 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Draw video frame to canvas
+ 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     try {
@@ -762,11 +758,11 @@ async function detectBarcode() {
             
             if (barcodes.length > 0) {
                 const now = Date.now();
-                // Only process if it's been at least 1 second since last detection
+                
                 if (now - lastDetectionTime > 1000) {
                     lastDetectionTime = now;
                     
-                    // Get the most central barcode
+                  
                     const barcode = barcodes.reduce((prev, curr) => {
                         const prevDist = Math.sqrt(
                             Math.pow(prev.boundingBox.x + prev.boundingBox.width/2 - canvas.width/2, 2) + 
@@ -788,7 +784,7 @@ async function detectBarcode() {
         console.error('Barcode detection error:', error);
     }
     
-    // Continue detection loop
+ 
     if (scannerActive) {
         requestAnimationFrame(detectBarcode);
     }
@@ -801,11 +797,11 @@ async function detectText() {
     const canvas = document.getElementById('scannerCanvas');
     const context = canvas.getContext('2d');
     
-    // Set canvas dimensions to match video
+    
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Draw video frame to canvas
+
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     try {
@@ -819,11 +815,11 @@ async function detectText() {
         
         if (text) {
             const now = Date.now();
-            // Only process if it's been at least 1 second since last detection
+           
             if (now - lastDetectionTime > 1000) {
                 lastDetectionTime = now;
                 
-                // Look for tracking code pattern (LT- followed by 6 alphanumeric chars)
+              
                 const trackingCodeMatch = text.match(/LT-[A-Z0-9]{6}/i);
                 if (trackingCodeMatch) {
                     detectedTrackingCode = trackingCodeMatch[0].toUpperCase();
@@ -834,8 +830,7 @@ async function detectText() {
     } catch (error) {
         console.error('Text recognition error:', error);
     }
-    
-    // Continue detection loop
+ 
     if (scannerActive) {
         requestAnimationFrame(detectText);
     }
@@ -862,7 +857,7 @@ async function lookupOrder() {
     }
     
     try {
-        // Find order with this tracking code
+       
         const order = Object.values(laundryData).find(o => o.trackingCode === detectedTrackingCode);
         
         if (order) {

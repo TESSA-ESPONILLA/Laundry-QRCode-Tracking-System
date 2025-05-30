@@ -14,12 +14,12 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <script type="module">
-        // Import Firebase modules
+     
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
         import { getFirestore, collection, addDoc, updateDoc, doc, getDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-        // Firebase configuration
+       
         const firebaseConfig = {
             apiKey: "AIzaSyDT4kkrrr_b1oThap6A_Y1Ry0ub4aBDjt0",
             authDomain: "laundry-tracking-system.firebaseapp.com",
@@ -30,12 +30,12 @@
             measurementId: "G-VLXNQRRGJK"
         };
 
-        // Initialize Firebase
+      
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // Make db available globally
+       
         window.db = db;
         window.getDocs = getDocs;
         window.collection = collection;
@@ -54,8 +54,6 @@
             --danger-color: #ef4444;
             --info-color: #06b6d4;
         }
-
-        /* Add these to your existing styles */
 
 
         body {
@@ -281,7 +279,7 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
+   
     <nav class="navbar navbar-expand-lg admin-nav">
         <div class="container">
             <a class="navbar-brand text-white fw-bold" href="index.html">
@@ -298,14 +296,14 @@
         </div>
     </nav>
 
-    <!-- Admin Panel -->
+  
     <div class="container py-4">
         <div class="page-header text-center text-white">
             <h1 class="display-4 fw-bold mb-3">Admin Dashboard</h1>
             <p class="lead">Manage laundry transactions and update status</p>
         </div>
 
-        <!-- Admin Navigation -->
+     
         <div class="row mb-4">
             <div class="col-12">
                 <div class="glass-card p-3">
@@ -324,7 +322,6 @@
             </div>
         </div>
 
-        <!-- New Transaction Section -->
         <div id="newTransaction" class="admin-section">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
@@ -385,7 +382,7 @@
             </div>
         </div>
 
-        <!-- Manage Orders Section -->
+       
         <div id="manageOrders" class="admin-section" style="display: none;">
             <div class="glass-card p-4">
                 <h4 class="text-white mb-4">
@@ -405,7 +402,7 @@
                             </tr>
                         </thead>
                         <tbody id="loadOrdersTable">
-                            <!-- Orders will be populated here -->
+                            <!-- tale displayy here -->
                         </tbody>
                     </table>
                 </div>
@@ -413,7 +410,7 @@
         </div>
 
 
-     <!-- Notification Modal -->
+
    <div class="modal fade" id="notificationModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content notification-modal">
@@ -467,7 +464,7 @@
     </div>
 
 
-    <!-- Replace the Generate QR Section with this Barcode Scanner Section -->
+ 
 <div id="generateQR" class="admin-section" style="display: none;">
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -501,7 +498,6 @@
 </div>
 
 
-<!-- Receipt Modal -->
 <div class="modal fade" id="receiptModal" tabindex="-1" >
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -623,7 +619,7 @@
 
         async function saveTransaction() {
             try {
-                // Get form values
+               
                 const customerName = document.getElementById('customerName').value.trim();
                 const phoneNumber = document.getElementById('phoneNumber').value.trim();
                  const email = document.getElementById('email').value.trim();
@@ -633,18 +629,16 @@
                 const pickupTime = document.getElementById('pickupTime').value;
                 const instructions = document.getElementById('instructions').value.trim();
 
-                // Validate required fields
                 if (!customerName || !phoneNumber || !serviceType || isNaN(weight) || !pickupDate || !pickupTime) {
                     throw new Error('Please fill in all required fields correctly.');
                 }
 
-                // Additional validation
+                
                 validateForm();
 
-                // Generate tracking code
                 const trackingCode = generateTrackingCode();
 
-                // Create transaction object with proper timestamps structure
+                
                 const transaction = {
                     trackingCode,
                     customerName,
@@ -662,14 +656,14 @@
                     }
                 };
 
-                // Save to Firebase
+            
                 const docRef = await addDoc(collection(db, "laundryOrders"), transaction);
                 console.log("Transaction saved with ID: ", docRef.id);
 
-                // Update local data
+               
                 laundryData[docRef.id] = { id: docRef.id, ...transaction };
 
-                // Show success message
+               
                 await Swal.fire({
                     icon: 'success',
                     title: 'Transaction Saved!',
@@ -679,16 +673,16 @@
 
                 showReceipt(docRef.id);
 
-                // Reset form
+                
                 document.getElementById('newTransactionForm').reset();
                 
-                // Set default pickup date to tomorrow again
+               
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 document.getElementById('pickupDate').valueAsDate = tomorrow;
 
 
-                // Refresh orders table
+             
                 await loadData();
 
             } catch (error) {
@@ -704,30 +698,29 @@
 
 
 
-        // Function to show receipt
+       
 function showReceipt(orderId) {
     const order = laundryData[orderId];
     if (!order) return;
 
-    // Calculate rates based on service type
+   
     const rates = {
-        'wash-only': 35,
-        'wash-dry': 50,
-        'dry-clean': 75,
-        'iron-only': 25
+        'wash-only': 150,
+        'wash-dry': 175,
+        'dry-clean': 180,
+        'iron-only': 75
     };
 
-    const rate = rates[order.serviceType] || 35;
+    const rate = rates[order.serviceType] || 150;
     const amount = rate * order.weight;
-    const tax = amount * 0.12;
+    const tax = amount * 0.10;
     const total = amount + tax;
 
-    // Update receipt content
+ 
     document.getElementById('receipt-tracking').textContent = order.trackingCode;
     document.getElementById('receipt-date').textContent = new Date().toLocaleDateString();
     document.getElementById('receipt-customer').textContent = order.customerName;
 
-    // Update receipt items
     const itemsTable = document.getElementById('receipt-items');
     itemsTable.innerHTML = `
         <tr>
@@ -738,17 +731,15 @@ function showReceipt(orderId) {
         </tr>
     `;
 
-    // Update totals
     document.getElementById('receipt-subtotal').textContent = `₱${amount.toFixed(2)}`;
     document.getElementById('receipt-tax').textContent = `₱${tax.toFixed(2)}`;
     document.getElementById('receipt-total').textContent = `₱${total.toFixed(2)}`;
 
-    // Show modal
     const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
     receiptModal.show();
 }
 
-// Function to print receipt
+
 function printReceipt() {
     const receiptContent = document.getElementById('receiptContent').innerHTML;
     const printWindow = window.open('', '_blank');
@@ -784,15 +775,15 @@ function printReceipt() {
 }
 
         function showAdminSection(sectionId, event) {
-            // Hide all sections
+           
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.style.display = 'none';
             });
             
-            // Show selected section
+          
             document.getElementById(sectionId).style.display = 'block';
 
-            // Update button states
+         
             document.querySelectorAll('.btn-group .btn').forEach(btn => {
                 btn.classList.remove('active', 'btn-gradient');
                 btn.classList.add('btn-outline-light');
@@ -803,7 +794,7 @@ function printReceipt() {
                 event.target.classList.remove('btn-outline-light');
             }
 
-            // Load data if needed
+          
             if (sectionId === 'manageOrders') {
                 loadOrdersTable();
             }
@@ -858,7 +849,7 @@ async function updateOrderStatusInFirebase(orderId, status) {
             }
         });
         
-        // Update local data
+   
         laundryData[orderId].status = status;
         laundryData[orderId].timestamps[status] = new Date().toLocaleString();
         
@@ -869,7 +860,7 @@ async function updateOrderStatusInFirebase(orderId, status) {
     }
 }
 
-// Initialize the scanner when the page loads
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeScanner();
     
@@ -886,7 +877,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Function to generate a barcode from the tracking code
 function generateBarcode(trackingCode) {
     if (!trackingCode) {
         Swal.fire({
@@ -902,13 +892,13 @@ function generateBarcode(trackingCode) {
         const canvas = document.getElementById('barcodeCanvas');
         const container = document.getElementById('barcodeDisplay');
         
-        // Clear previous barcode
+        
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Use JsBarcode to generate the barcode
+       
         JsBarcode(canvas, trackingCode, {
-            format: "CODE128", // Most versatile barcode format
+            format: "CODE128", 
             width: 2,
             height: 100,
             displayValue: true,
@@ -918,7 +908,7 @@ function generateBarcode(trackingCode) {
             lineColor: "#000000"
         });
 
-        // Update the display
+      
         document.getElementById('trackingText').textContent = trackingCode;
         container.style.display = 'block';
 
@@ -933,7 +923,7 @@ function generateBarcode(trackingCode) {
     }
 }
 
-// Function to print the barcode
+
 function printBarcode() {
     const canvas = document.getElementById('barcodeCanvas');
     const trackingCode = document.getElementById('trackingText').textContent;
@@ -982,7 +972,6 @@ function printBarcode() {
     printWindow.document.close();
 }
 
-// Function to download the barcode
 function downloadBarcode() {
     const canvas = document.getElementById('barcodeCanvas');
     const trackingCode = document.getElementById('trackingText').textContent;
@@ -1003,7 +992,7 @@ function downloadBarcode() {
     link.click();
 }
 
-// Add this to your initialization code
+
 document.addEventListener('DOMContentLoaded', function() {
     // Set up canvas dimensions
     const canvas = document.getElementById('barcodeCanvas');
@@ -1033,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Initialize on page load
+   
         document.addEventListener('DOMContentLoaded', function() {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);

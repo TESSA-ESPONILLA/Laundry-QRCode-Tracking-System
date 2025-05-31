@@ -130,6 +130,10 @@ tbody td button.btn-delete {
   border: none;
 }
 
+#manageOrders table small.text-info {
+  color: #a5faff !important;
+}
+
 .table-responsive {
   overflow-x: auto;
 }

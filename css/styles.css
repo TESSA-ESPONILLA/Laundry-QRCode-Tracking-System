@@ -183,7 +183,6 @@ html {
 
 /* Navbar Gradient */
 .admin-nav {
-    /* background:  #c4f4f4; */
     background: linear-gradient(90deg, #c4f4f4, #ffc6a5);
     padding: 0.8rem 1rem;
     min-height: 100px;
@@ -240,6 +239,8 @@ html {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     max-width: 170vh;
     margin: 2rem auto;
+
+    backdrop-filter: blur(3px);
 }
 
 .input-group-lg input,

@@ -1,16 +1,16 @@
 body {
-    background-image: url('laundry-bg2.jpg');
-    /* Change to actual image path */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
+  background-image: url('laundry-bg2.jpg');
+  /* Change to actual image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 
-    font-family: Poppins;
-    position: relative;
+  font-family: Poppins;
+  position: relative;
 }
 
 body::before {
@@ -20,6 +20,90 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3); 
-  z-index: -1; 
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+}
+
+/* STATUS DISPLAY */
+#statusDisplay .glass-card {
+  background: linear-gradient(to right, #c4f4f4b7, #ffc6a5bd);
+  padding: 3rem;
+  border-radius: .3rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  max-width: 170vh;
+  margin: 2rem auto;
+
+  backdrop-filter: blur(3px);
+}
+
+/* Heading color */
+#statusDisplay h3 {
+  color: #1e3a8a !important;
+  font-weight: bold;
+  /* Maintain boldness for emphasis */
+}
+
+/* Text color for labels and values */
+#statusDisplay .text-white-50 {
+  color: white !important;
+}
+
+#statusDisplay .text-white-50 strong {
+  color: #1e3a8a;
+  font-weight: bold;
+}
+
+#statusDisplay .text-white-50 span {
+  color: white;
+}
+
+#statusDisplay .glass-card h6.mb-1 {
+  color: #1e3a8a !important;
+  /* Use !important to ensure it overrides other styles */
+}
+
+/* Status badge */
+#statusDisplay .status-badge .badge {
+  font-weight: bold;
+  padding: 1rem 2.7rem;
+  border: none;
+  border-radius: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin: 5px;
+
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;/
+}
+
+/* Adjustments for different badge states if needed */
+#statusDisplay .status-badge .badge.bg-processing {
+  background-color: #a7ecec;
+  color: #1e3a8a;
+}
+
+#statusDisplay .status-badge .badge.bg-ready {
+  background-color: #ccff90;
+  /* A light green for "Ready" */
+  color: #2e7d32;
+  /* A darker green for "Ready" text */
+  border-color: #2e7d32;
+}
+
+#statusDisplay .status-badge .badge.bg-complete {
+  background-color: #90caf9;
+  /* A light blue for "Complete" */
+  color: #1565c0;
+  /* A darker blue for "Complete" text */
+  border-color: #1565c0;
+}
+
+#statusDisplay .status-badge .badge.bg-cancelled {
+  background-color: #ffcdd2;
+  /* A light red for "Cancelled" */
+  color: #c62828;
+  /* A darker red for "Cancelled" text */
+  border-color: #c62828;
 }

@@ -493,6 +493,19 @@
         let currentOrderId = null;
         let currentOrderData = null;
 
+ 
+// Replace 'ORDER_ID_HERE' with the actual order ID
+const orderId = 'ORDER_ID_HERE';
+const orderRef = doc(db, "laundryOrders", orderId);
+
+onSnapshot(orderRef, (docSnap) => {
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        updateStatusBadge(data.status);
+        updateTimeline(data);
+    }
+});
+
      
         async function trackLaundry() {
             const trackingCode = document.getElementById('trackingCode').value.trim();
@@ -645,6 +658,7 @@
             return serviceMap[serviceType] || serviceType;
         }
 
+   
    
 
 

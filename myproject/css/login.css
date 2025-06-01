@@ -1,0 +1,121 @@
+* {
+    font-family: Poppins;
+}
+
+body {
+    background: linear-gradient(135deg, #f3b490, #80dfdf);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+}
+
+.login-container {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 3rem;
+    border-radius: .5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 320px;
+
+    backdrop-filter: blur(50px);
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #003366;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input[type="email"] {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+input[type="password"], input[type="text"] {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding-right: 30px; /* Add padding to the right to make space for the eye */
+    width: 100%; /* Ensure it takes full width */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+input[type="password"]:focus {
+    outline: none; 
+    border-color: #003366; 
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25); /* Subtle focus shadow */
+}
+
+button {
+    background-color: #1e3a8a;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 3rem;
+    font-size: 16px;
+    cursor: pointer;
+    border: 3px solid #1e3a8a;
+    justify-content: center;
+    margin-top: 10px;
+
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+
+    background-color: transparent;
+    color: #1e3a8a;
+    border: 3px solid #1e3a8a;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: #777;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    color: #003366; /* Example hover color */
+}
+
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#separator {
+    margin: 15px 0;
+    font-weight: bold;
+    color: #666;
+}
+
+#google-login-btn {
+    margin-top: 0;
+    display: inline-flex;
+    justify-content: center;
+}
+
+#error-message {
+    color: red;
+    margin-bottom: 12px;
+    display: none;
+}

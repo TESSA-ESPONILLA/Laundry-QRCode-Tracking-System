@@ -1,106 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LaundryTrack - Barcode Laundry Service</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #fceabb, #2193b0);
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #333;
-    }
-    .login-container {
-      background: #ffffffcc;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 320px;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    input[type="email"],
-    input[type="password"] {
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
 
-    button {
-        background-color: #003366;
-        border: 2px solid white;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background 0.3s ease, color 0.3s ease;
-    }
+  <link rel="stylesheet" href="css/login.css">
 
-    button:hover {
-        background: linear-gradient(135deg, #fceabb, #2193b0);
-        color: white;
-        border-color: #2193b0;
-    }
+  <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
 
-    #separator {
-      margin: 20px 0;
-      font-weight: bold;
-      color: #666;
-    }
-    #google-login-btn {
-      margin-top: 10px;
-      display: flex;
-      justify-content: center;
-    }
-    #error-message {
-      color: red;
-      margin-bottom: 12px;
-      display: none;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
   <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 </head>
+
 <body>
-    <div class="login-container">
+  <div class="login-container">
     <h1>LaundryTrack Login</h1>
 
     <form id="login-form">
       <div id="error-message"></div>
       <div id="loading-message">Checking authentication...</div>
       <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
+      <div class="input-group">
+        <input type="password" id="password" placeholder="Password" required />
+        <span class="password-toggle" id="togglePassword">
+          <i class="fas fa-eye"></i>
+        </span>
+      </div>
       <button type="submit">Login with Email</button>
     </form>
 
     <div id="separator">OR</div>
 
-     <button id="google-login-btn">Login with Google</button>
+    <button id="google-login-btn">Login with Google</button>
   </div>
 
   <script>
     const allowedAdminEmails = [
-        "christian.cadiz@wvsu.edu.ph",
-        "angelcuariesmae.patricio@wvsu.edu.ph",
-        "tessa.esponilla@wvsu.edu.ph",
-        "elliezamae.bartonico@wvsu.edu.ph",
-        "reycel.mendiola@wvsu.edu.ph",
-        "kiyanrose.capilitan@wvsu.edu.ph",
-        "keanarose.andoque@wvsu.edu.ph"
+      "christian.cadiz@wvsu.edu.ph",
+      "angelcuariesmae.patricio@wvsu.edu.ph",
+      "tessa.esponilla@wvsu.edu.ph",
+      "elliezamae.bartonico@wvsu.edu.ph",
+      "reycel.mendiola@wvsu.edu.ph",
+      "kiyanrose.capilitan@wvsu.edu.ph",
+      "keanarose.andoque@wvsu.edu.ph"
     ];
 
     function isWVSUEmail(email) {
@@ -110,7 +55,7 @@
     const { Client, Account } = Appwrite;
 
     const client = new Client()
-      .setEndpoint('https://fra.cloud.appwrite.io/v1') 
+      .setEndpoint('https://fra.cloud.appwrite.io/v1')
       .setProject('683bd6c5003a65d4deaa');
 
     const account = new Account(client);
@@ -118,8 +63,14 @@
     const urlParams = new URLSearchParams(window.location.search);
     const fromOAuth = urlParams.has('code') || urlParams.has('state') || urlParams.has('userId');
 
-if (!fromOAuth) {
-      (async () => {
+    (async () => {
+      const blockedThirdParty = await detectThirdPartyCookiesBlocked();
+      if (blockedThirdParty) {
+        showError("It appears third-party cookies are blocked. Please enable them to log in.");
+        return; 
+      }
+
+      if (!fromOAuth) {
         try {
           showLoading('Checking existing session...');
           const user = await account.get();
@@ -129,21 +80,20 @@ if (!fromOAuth) {
         } finally {
           hideLoading();
         }
-      })();
-    } else {
-      setTimeout(async () => {
-        try {
-          showLoading('Processing OAuth login...');
-          const user = await account.get();
-          handleLoginRedirect(user);
-        } catch (error) {
-          showError('OAuth login failed. Please try again.');
-        } finally {
-          hideLoading();
-        }
-      }, 2000);
-    }
-
+      } else {
+        setTimeout(async () => {
+          try {
+            showLoading('Processing OAuth login...');
+            const user = await account.get();
+            handleLoginRedirect(user);
+          } catch (error) {
+            showError('OAuth login failed. Please try again.');
+          } finally {
+            hideLoading();
+          }
+        }, 2000);
+      }
+    })();
 
     function handleLoginRedirect(user) {
       if (!isWVSUEmail(user.email)) {
@@ -178,7 +128,7 @@ if (!fromOAuth) {
         const user = await account.get();
         handleLoginRedirect(user);
       } catch (err) {
-        showError(err.message || "Login failed. Please check your credentials.");
+        showError(err.message || "Login failed. Please check your credentials and cookie settings.");
       } finally {
         hideLoading();
       }
@@ -227,6 +177,35 @@ if (!fromOAuth) {
     function clearLoading() {
       hideLoading();
     }
+
+    async function detectThirdPartyCookiesBlocked() {
+      return new Promise((resolve) => {
+        const cookieName = 'testThirdPartyCookie';
+        const cookieValue = 'test';
+        const cookieDomain = '.some-external-domain.com'; // Replace with a known external domain
+
+        document.cookie = `${cookieName}=${cookieValue}; domain=${cookieDomain}; path=/; secure; samesite=none`;
+
+        setTimeout(() => {
+          const isBlocked = document.cookie.indexOf(`${cookieName}=${cookieValue}`) === -1;
+          document.cookie = `${cookieName}=; domain=${cookieDomain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=none`; // Clear the cookie
+
+          resolve(isBlocked);
+        }, 100); // Give a short delay for the cookie to potentially be set
+      });
+    }
+
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = togglePassword.querySelector('i');
+
+    togglePassword.addEventListener('click', function () {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      eyeIcon.classList.toggle('fa-eye');
+      eyeIcon.classList.toggle('fa-eye-slash');
+    });
   </script>
 </body>
+
 </html>

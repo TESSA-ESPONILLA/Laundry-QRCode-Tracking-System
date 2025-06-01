@@ -60,7 +60,7 @@ body::before {
   color: white;
   font-weight: bold;
   padding: 0.6rem 2.7rem;
-  border: none;
+  border: 3px solid #1e3a8a;
   border-radius: 3rem;
   display: inline-flex;
   align-items: center;
@@ -73,9 +73,12 @@ body::before {
 }
 
 .btn-logout:hover {
-  background-color: #ffffff73;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+
+  background-color: transparent;
   color: #1e3a8a;
-  border-color: #1e3a8a;
+  border: 3px solid #1e3a8a;
 }
 
 /* TABLE */
@@ -159,4 +162,58 @@ tbody td button.btn-delete {
 
 .table-responsive {
   overflow-x: auto;
+}
+
+/* LOADING INDICATOR */
+#loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1001;
+  font-family: Poppins;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  /* Use your primary blue */
+}
+
+#admin-content {
+  display: none;
+  /* Initially hidden */
+  /* Add any default styling for your admin content container here if needed */
+}
+
+/* Optional: Add a spinner animation for the loading indicator */
+#loading-indicator::before {
+  content: '';
+  border: 5px solid rgba(var(--primary-color-rgb), 0.2);
+  /* Light shade of your primary blue */
+  border-top: 5px solid var(--primary-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-right: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Helper to get RGB value from hex for the spinner */
+:root {
+  --primary-color-rgb: 30, 58, 138;
+  /* RGB value of #1e3a8a */
 }

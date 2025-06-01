@@ -306,6 +306,13 @@
     <div id="emailConfirmationFrame" style="display: none;"></div>
 
 
+    <div id="loading-indicator" style="display: block;">Checking Authentication...</div>
+    <div id="admin-content" style="display: none;">
+        <h1>Admin Dashboard</h1>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+
     <!-- Footer -->
     <footer>
         <p style="padding-top: 1rem;">&copy; 2025 LaundryTrack. All rights reserved.</p>
@@ -946,6 +953,8 @@
             document.querySelector('#notificationModal .btn-gradient').addEventListener('click', sendNotification);
         });
     </script>
+
+
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <script>
         const { Client, Account } = Appwrite;
@@ -956,20 +965,27 @@
 
         const account = new Account(client);
 
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const adminContent = document.getElementById('admin-content');
+
         (async () => {
             try {
-            await account.get();
+                await account.get();
+                loadingIndicator.style.display = 'none';
+                adminContent.style.display = 'block';
             } catch {
-            window.location.href = 'login.html';
+                window.location.href = 'login.html';
             }
         })();
 
         function logout() {
             account.deleteSession('current').then(() => {
-            window.location.href = 'login.html';
+                window.location.href = 'login.html';
             });
         }
     </script>
+
+
 </body>
 
 </html>

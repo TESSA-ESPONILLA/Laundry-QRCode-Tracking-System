@@ -55,6 +55,29 @@ body::before {
   border-radius: 0 .4rem .4rem 0;
 }
 
+.btn-logout {
+  background-color: #1e3a8a;
+  color: white;
+  font-weight: bold;
+  padding: 0.6rem 2.7rem;
+  border: none;
+  border-radius: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin: 5px;
+
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.btn-logout:hover {
+  background-color: #ffffff73;
+  color: #1e3a8a;
+  border-color: #1e3a8a;
+}
+
 /* TABLE */
 table {
   width: 100%;

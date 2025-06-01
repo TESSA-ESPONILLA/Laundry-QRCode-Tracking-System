@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LaundryTrack - Barcode Laundry Service</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #fceabb, #2193b0);
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+    }
+    .login-container {
+      background: #ffffffcc;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 320px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    input[type="email"],
+    input[type="password"] {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+        background-color: #003366;
+        border: 2px solid white;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    button:hover {
+        background: linear-gradient(135deg, #fceabb, #2193b0);
+        color: white;
+        border-color: #2193b0;
+    }
+
+    #separator {
+      margin: 20px 0;
+      font-weight: bold;
+      color: #666;
+    }
+    #google-login-btn {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+    #error-message {
+      color: red;
+      margin-bottom: 12px;
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+</head>
+<body>
+    <div class="login-container">
+    <h1>LaundryTrack Login</h1>
+
+    <form id="login-form">
+      <div id="error-message"></div>
+      <div id="loading-message">Checking authentication...</div>
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Login with Email</button>
+    </form>
+
+    <div id="separator">OR</div>
+
+     <button id="google-login-btn">Login with Google</button>
+  </div>
+
+  <script>
+    const allowedAdminEmails = [
+        "christian.cadiz@wvsu.edu.ph",
+        "angelcuariesmae.patricio@wvsu.edu.ph",
+        "tessa.esponilla@wvsu.edu.ph",
+        "elliezamae.bartonico@wvsu.edu.ph",
+        "reycel.mendiola@wvsu.edu.ph",
+        "kiyanrose.capilitan@wvsu.edu.ph",
+        "keanarose.andoque@wvsu.edu.ph"
+    ];
+
+    function isWVSUEmail(email) {
+      return email.toLowerCase().endsWith('@wvsu.edu.ph');
+    }
+
+    const { Client, Account } = Appwrite;
+
+    const client = new Client()
+      .setEndpoint('https://fra.cloud.appwrite.io/v1') 
+      .setProject('683bd6c5003a65d4deaa');
+
+    const account = new Account(client);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromOAuth = urlParams.has('code') || urlParams.has('state') || urlParams.has('userId');
+
+if (!fromOAuth) {
+      (async () => {
+        try {
+          showLoading('Checking existing session...');
+          const user = await account.get();
+          handleLoginRedirect(user);
+        } catch (error) {
+          console.log('No existing session found');
+        } finally {
+          hideLoading();
+        }
+      })();
+    } else {
+      setTimeout(async () => {
+        try {
+          showLoading('Processing OAuth login...');
+          const user = await account.get();
+          handleLoginRedirect(user);
+        } catch (error) {
+          showError('OAuth login failed. Please try again.');
+        } finally {
+          hideLoading();
+        }
+      }, 2000);
+    }
+
+
+    function handleLoginRedirect(user) {
+      if (!isWVSUEmail(user.email)) {
+        showError("Only @wvsu.edu.ph emails are allowed.");
+        account.deleteSession('current');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      if (allowedAdminEmails.includes(user.email)) {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      clearError();
+      clearLoading();
+
+      if (!email || !password) {
+        showError('Please enter both email and password.');
+        return;
+      }
+
+      try {
+        showLoading('Logging in...');
+        await account.createEmailSession(email, password);
+        const user = await account.get();
+        handleLoginRedirect(user);
+      } catch (err) {
+        showError(err.message || "Login failed. Please check your credentials.");
+      } finally {
+        hideLoading();
+      }
+    });
+
+    document.getElementById('google-login-btn').addEventListener('click', () => {
+      clearError();
+      clearLoading();
+
+      try {
+        account.createOAuth2Session(
+          'google',
+          'https://laundry-tracking-system.netlify.app/login.html',
+          'https://laundry-tracking-system.netlify.app'
+        );
+      } catch (error) {
+        showError('Failed to initiate Google login. Please try again.');
+      }
+    });
+
+    function showError(message) {
+      clearLoading();
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    function clearError() {
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = '';
+      errorDiv.style.display = 'none';
+    }
+
+    function showLoading(message) {
+      clearError();
+      const loadingDiv = document.getElementById('loading-message');
+      loadingDiv.textContent = message;
+      loadingDiv.style.display = 'block';
+    }
+
+    function hideLoading() {
+      const loadingDiv = document.getElementById('loading-message');
+      loadingDiv.style.display = 'none';
+    }
+
+    function clearLoading() {
+      hideLoading();
+    }
+  </script>
+</body>
+</html>

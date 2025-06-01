@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LaundryTrack - QR Code Laundry Service</title>
 
-    <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/customer.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/customer.css">
     
     <link href='https://fonts.googleapis.com/css?family=Shrikhand' rel='stylesheet'>
     <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
@@ -57,7 +57,7 @@
             <a class="navbar-brand d-flex align-items-center text-white fw-bold" href="#"
                 style="font-family: Shrikhand; font-size: 2rem;">
                 <div class="logo-container me-2">
-                    <img src="../css/laundry-logo.png" alt="LaundryTracker Logo" class="logo-icon">
+                    <img src="css/laundry-logo.png" alt="LaundryTracker Logo" class="logo-icon">
                 </div>
                 LaundryTracker
             </a>
@@ -65,7 +65,7 @@
                 <button class="btn-nav2">
                     <i class="fas fa-users me-1"></i>Customer View
                 </button>
-                <a href="admin.html" class="btn-nav1">
+                <a href="login.html" class="btn-nav1">
                     <i class="fas fa-cog me-1"></i>Admin Panel
                 </a>
             </div>
@@ -93,37 +93,6 @@
                     <i class="fas fa-search me-2"></i>Track
                 </button>
             </div>
-
-            <!-- Scanner Options -->
-            <div class="mb-4">
-                <div class="d-flex flex-wrap gap-3 align-items-center justify-content-center">
-                    <select class="form-select form-select-lg" id="scanType" style="max-width: 300px;">
-                        <option value="barcode">Barcode Scanner</option>
-                        <option value="text">Text Recognition</option>
-                    </select>
-                    <button id="startScanner" class="btn-container btn-lg">
-                        <i class="fas fa-camera me-2"></i>Start Scanner
-                    </button>
-                    <button id="stopScanner" class="btn btn-danger btn-lg" style="display: none;">
-                        <i class="fas fa-stop-circle me-2"></i>Stop Scanner
-                    </button>
-                </div>
-
-                <!-- Scanner Area -->
-                <div id="scannerContainer" style="display: none;" class="mt-4">
-                    <video id="scannerVideo" playsinline></video>
-                    <canvas id="scannerCanvas" style="display: none;"></canvas>
-                    <div class="scan-guide"></div>
-                </div>
-
-                <!-- Detected Code -->
-                <div class="mt-4">
-                    <h6 class="fw-bold" style="color: #1e3a8a; padding-bottom: 10px; font-weight: bold;">Detected Code:
-                    </h6>
-                    <div id="detectedCode" class="bg-white text-dark p-3 rounded text-center">
-                        No code detected yet
-                    </div>
-                </div>
 
                 <!-- Lookup Button -->
                 <div class="mt-3" id="scanResultActions" style="display: none;">
@@ -241,6 +210,8 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
     <script>
 
@@ -415,266 +386,6 @@
             return serviceMap[serviceType] || serviceType;
         }
 
-
-
-
-
-
-        let scannerActive = false;
-        let videoStream = null;
-        let barcodeDetector = null;
-        let lastDetectionTime = 0;
-        let detectedTrackingCode = '';
-
-
-        async function initializeScanner() {
-            // Check if BarcodeDetector API is available
-            if ('BarcodeDetector' in window) {
-                barcodeDetector = new BarcodeDetector({
-                    formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e']
-                });
-            } else {
-                console.warn('BarcodeDetector API not supported');
-            }
-
-
-            document.getElementById('startScanner').addEventListener('click', startScanner);
-            document.getElementById('stopScanner').addEventListener('click', stopScanner);
-        }
-
-        async function startScanner() {
-            try {
-                const scanType = document.getElementById('scanType').value;
-                const video = document.getElementById('scannerVideo');
-
-
-                videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                });
-
-                video.srcObject = videoStream;
-                await video.play();
-
-                document.getElementById('scannerContainer').style.display = 'block';
-                document.getElementById('startScanner').style.display = 'none';
-                document.getElementById('stopScanner').style.display = 'inline-block';
-
-                scannerActive = true;
-                detectedTrackingCode = '';
-                document.getElementById('detectedCode').innerHTML = '<p class="mb-0">No code detected yet</p>';
-                document.getElementById('scanResultActions').style.display = 'none';
-
-
-                if (scanType === 'barcode') {
-                    detectBarcode();
-                } else {
-                    detectText();
-                }
-            } catch (error) {
-                console.error('Error starting scanner:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Camera Error',
-                    text: 'Could not access the camera. Please ensure you have granted camera permissions.',
-                    confirmButtonText: 'OK'
-                });
-            }
-        }
-
-        function stopScanner() {
-            scannerActive = false;
-
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-            }
-
-            document.getElementById('scannerContainer').style.display = 'none';
-            document.getElementById('startScanner').style.display = 'inline-block';
-            document.getElementById('stopScanner').style.display = 'none';
-
-            const video = document.getElementById('scannerVideo');
-            video.srcObject = null;
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeScanner();
-        });
-
-        async function detectBarcode() {
-            if (!scannerActive) return;
-
-            const video = document.getElementById('scannerVideo');
-            const canvas = document.getElementById('scannerCanvas');
-            const context = canvas.getContext('2d');
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            try {
-                if (barcodeDetector) {
-                    const barcodes = await barcodeDetector.detect(canvas);
-
-                    if (barcodes.length > 0) {
-                        const now = Date.now();
-
-                        if (now - lastDetectionTime > 1000) {
-                            lastDetectionTime = now;
-
-
-                            const barcode = barcodes.reduce((prev, curr) => {
-                                const prevDist = Math.sqrt(
-                                    Math.pow(prev.boundingBox.x + prev.boundingBox.width / 2 - canvas.width / 2, 2) +
-                                    Math.pow(prev.boundingBox.y + prev.boundingBox.height / 2 - canvas.height / 2, 2)
-                                );
-                                const currDist = Math.sqrt(
-                                    Math.pow(curr.boundingBox.x + curr.boundingBox.width / 2 - canvas.width / 2, 2) +
-                                    Math.pow(curr.boundingBox.y + curr.boundingBox.height / 2 - canvas.height / 2, 2)
-                                );
-                                return currDist < prevDist ? curr : prev;
-                            });
-
-                            detectedTrackingCode = barcode.rawValue;
-                            displayDetectedCode(detectedTrackingCode);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Barcode detection error:', error);
-            }
-
-
-            if (scannerActive) {
-                requestAnimationFrame(detectBarcode);
-            }
-        }
-
-        async function detectText() {
-            if (!scannerActive) return;
-
-            const video = document.getElementById('scannerVideo');
-            const canvas = document.getElementById('scannerCanvas');
-            const context = canvas.getContext('2d');
-
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            try {
-                // Use Tesseract.js for text recognition
-                const worker = await Tesseract.createWorker();
-                await worker.loadLanguage('eng');
-                await worker.initialize('eng');
-
-                const { data: { text } } = await worker.recognize(canvas);
-                await worker.terminate();
-
-                if (text) {
-                    const now = Date.now();
-
-                    if (now - lastDetectionTime > 1000) {
-                        lastDetectionTime = now;
-
-
-                        const trackingCodeMatch = text.match(/LT-[A-Z0-9]{6}/i);
-                        if (trackingCodeMatch) {
-                            detectedTrackingCode = trackingCodeMatch[0].toUpperCase();
-                            displayDetectedCode(detectedTrackingCode);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Text recognition error:', error);
-            }
-
-            if (scannerActive) {
-                requestAnimationFrame(detectText);
-            }
-        }
-
-        function displayDetectedCode(code) {
-            const detectedCodeDiv = document.getElementById('detectedCode');
-            detectedCodeDiv.innerHTML = `
-        <h4 class="text-success">${code}</h4>
-        <p class="mb-0 text-muted">Detected at ${new Date().toLocaleTimeString()}</p>
-    `;
-            document.getElementById('scanResultActions').style.display = 'block';
-        }
-
-        async function lookupOrder() {
-            if (!detectedTrackingCode) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'No Code Detected',
-                    text: 'Please scan a valid tracking code first',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-
-            try {
-
-                const order = Object.values(laundryData).find(o => o.trackingCode === detectedTrackingCode);
-
-                if (order) {
-                    const modal = new bootstrap.Modal(document.getElementById('orderLookupModal'));
-                    const resultDiv = document.getElementById('orderLookupResult');
-
-                    const statusClass = `status-${order.status || 'received'}`;
-                    const statusText = (order.status || 'received').charAt(0).toUpperCase() + (order.status || 'received').slice(1);
-
-                    resultDiv.innerHTML = `
-                <h5>Order Details</h5>
-                <p><strong>Tracking Code:</strong> ${order.trackingCode}</p>
-                <p><strong>Customer:</strong> ${order.customerName}</p>
-                <p><strong>Phone:</strong> ${order.phoneNumber}</p>
-                <p><strong>Email:</strong> ${order.email || 'N/A'}</p>
-                <p><strong>Service:</strong> ${getServiceTypeName(order.serviceType)} (${order.weight}kg)</p>
-                <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span></p>
-                <p><strong>Pickup:</strong> ${formatDate(order.pickupDate)} at ${order.pickupTime}</p>
-                ${order.instructions ? `<p><strong>Instructions:</strong> ${order.instructions}</p>` : ''}
-                
-                <div class="mt-3">
-                    <button class="btn btn-primary" onclick="updateOrderStatus('${order.id}')">
-                        Update Status
-                    </button>
-                </div>
-            `;
-
-                    modal.show();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Order Not Found',
-                        text: `No order found with tracking code: ${detectedTrackingCode}`,
-                        confirmButtonText: 'OK'
-                    });
-                }
-            } catch (error) {
-                console.error('Order lookup error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to lookup order information',
-                    confirmButtonText: 'OK'
-                });
-            }
-        }
-
-
-    </script>
-
+</script>
 </body>
-
 </html>
